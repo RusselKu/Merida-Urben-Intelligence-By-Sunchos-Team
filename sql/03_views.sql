@@ -39,7 +39,8 @@ SELECT
     -- Demographic KPIs
     COALESCE(fd.poblacion_total, 0) AS poblacion_total,
     ROUND(COALESCE(fd.poblacion_total, 0) / NULLIF(g.area_km2, 0), 2) AS densidad_poblacion_km2,
-    ROUND((COALESCE(fd.poblacion_pea, 0)::NUMERIC / NULLIF((fd.poblacion_total - fd.poblacion_0_14), 0)) * 100, 2) AS tasa_pea_porcentaje,
+    -- PEA rate base = population aged 12+ with known activity status (PEA + PE_INAC), as defined by INEGI
+    ROUND((COALESCE(fd.poblacion_pea, 0)::NUMERIC / NULLIF((fd.poblacion_pea + fd.poblacion_pnea), 0)) * 100, 2) AS tasa_pea_porcentaje,
     COALESCE(fd.poblacion_0_14, 0) AS poblacion_0_14,
     COALESCE(fd.poblacion_15_64, 0) AS poblacion_15_64,
     COALESCE(fd.poblacion_65_mas, 0) AS poblacion_65_mas,

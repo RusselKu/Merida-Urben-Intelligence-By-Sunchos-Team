@@ -39,7 +39,7 @@ def get_db_engine():
 
 
 def load_dim_geografia(gdf_agebs: gpd.GeoDataFrame, engine=None) -> int:
-    """Load AGEB polygons into dim_geografia."""
+    """Load real official AGEB polygons into dim_geografia."""
     if gdf_agebs.empty:
         return 0
 
@@ -57,8 +57,8 @@ def load_dim_geografia(gdf_agebs: gpd.GeoDataFrame, engine=None) -> int:
             mun = str(row.get("cve_mun", "050"))
             loc = str(row.get("cve_loc", "0001"))
             ageb = str(row.get("cve_ageb", "0000"))
-            nom = str(row.get("nom_asentamiento", "")) if pd.notna(row.get("nom_asentamiento")) else None
-            tipo = str(row.get("tipo_asentamiento", "")) if pd.notna(row.get("tipo_asentamiento")) else None
+            nom = str(row.get("nom_asentamiento", "Mérida Urbana"))
+            tipo = str(row.get("tipo_asentamiento", "AGEB Urbana"))
             area = float(row.get("area_km2", 0.0))
             wkt_4326 = row["geometry"].wkt if "geometry" in row and row["geometry"] is not None else None
 
@@ -75,12 +75,12 @@ def load_dim_geografia(gdf_agebs: gpd.GeoDataFrame, engine=None) -> int:
             })
             records_loaded += 1
 
-    print(f"[OK] Loaded {records_loaded} records into dim_geografia.")
+    print(f"[OK] Loaded {records_loaded} official AGEBs into dim_geografia.")
     return records_loaded
 
 
 def load_fact_demografia(df_demo: pd.DataFrame, engine=None) -> int:
-    """Load demographic measures into fact_demografia."""
+    """Load real official INEGI demographic measures into fact_demografia."""
     if df_demo.empty:
         return 0
 
@@ -125,5 +125,79 @@ def load_fact_demografia(df_demo: pd.DataFrame, engine=None) -> int:
             })
             records_loaded += 1
 
-    print(f"[OK] Loaded {records_loaded} records into fact_demografia.")
+    print(f"[OK] Loaded {records_loaded} official demographic records into fact_demografia.")
     return records_loaded
+
+
+def load_dim_actividad_economica(df_scian: pd.DataFrame, engine=None) -> int:
+    """Load real SCIAN taxonomy into dim_actividad_economica."""
+    if df_scian.empty:
+        return 0
+
+    if engine is None:
+        engine = get_db_engine()
+    if engine is None:
+        return 0
+
+    records_loaded = 0
+    with engine.begin() as conn:
+        for _, row in df_scian.iterrows():
+            scian_id = str(row.get("scian_id", ""))
+            codigo = str(row.get("codigo_actividad", ""))
+            sector_cod = str(row.get("sector_codigo", ""))
+            sector_nom = str(row.get("sector_nombre", ""))
+            cat_macro = str(row.get("categoria_macro", "Otro"))
+
+            stmt = text("""
+                INSERT INTO dim_actividad_economica (scian_id, codigo_actividad, sector_codigo, sector_nombre, categoria_macro)
+                VALUES (:scian_id, :codigo, :sector_cod, :sector_nom, :cat_macro)
+                ON CONFLICT (scian_id) DO NOTHING;
+            """)
+            conn.execute(stmt, {
+                "scian_id": scian_id, "codigo": codigo, "sector_cod": sector_cod,
+                "sector_nom": sector_nom, "cat_macro": cat_macro
+            })
+            records_loaded += 1
+
+    print(f"[OK] Loaded {records_loaded} SCIAN activity codes into dim_actividad_economica.")
+    return records_loaded
+
+
+def load_fact_negocios_batch(df_fact_negocios: pd.DataFrame, engine=None, batch_size=5000) -> int:
+    """Load spatially joined DENUE businesses into fact_negocios in batches."""
+    if df_fact_negocios.empty:
+        return 0
+
+    if engine is None:
+        engine = get_db_engine()
+    if engine is None:
+        return 0
+
+    total_loaded = 0
+    total_records = len(df_fact_negocios)
+    
+    with engine.begin() as conn:
+        for i in range(0, total_records, batch_size):
+            batch = df_fact_negocios.iloc[i : i + batch_size]
+            for _, row in batch.iterrows():
+                cvegeo = str(row.get("cvegeo", ""))
+                scian_id = str(row.get("scian_id", ""))
+                nombre = str(row.get("nombre_establecimiento", ""))[:255]
+                estrato = str(row.get("estrato_personal", ""))[:50]
+                lon = float(row.get("longitud", 0.0))
+                lat = float(row.get("latitud", 0.0))
+
+                stmt = text("""
+                    INSERT INTO fact_negocios (cvegeo, scian_id, nombre_establecimiento, estrato_personal, geom_punto)
+                    VALUES (:cvegeo, :scian_id, :nombre, :estrato, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326));
+                """)
+                conn.execute(stmt, {
+                    "cvegeo": cvegeo, "scian_id": scian_id, "nombre": nombre,
+                    "estrato": estrato, "lon": lon, "lat": lat
+                })
+                total_loaded += 1
+
+            print(f"   Progress: {total_loaded}/{total_records} businesses loaded...")
+
+    print(f"[OK] Loaded {total_loaded} real business establishments into fact_negocios.")
+    return total_loaded

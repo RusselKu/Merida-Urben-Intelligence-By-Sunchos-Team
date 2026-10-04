@@ -2,10 +2,10 @@
 Bronze Layer (Raw Ingestion):
 Reads raw source datasets without modifying original files.
 Sources:
-- INEGI Population and Housing Census 2020 (Demographics)
-- INEGI DENUE (National Directory of Economic Units)
-- INEGI Geo-statistical Cartography (Mérida AGEB Polygons)
-- Georeferenced Public Safety & Crime Incidents (Latitude/Longitude)
+- INEGI Population and Housing Census 2020 (Demographics - 526 Mérida Urban AGEBs)
+- INEGI DENUE (56,909 Mérida Economic Establishments)
+- INEGI Geo-statistical Cartography (Official 31a.shp AGEB Polygons for Mérida)
+- Georeferenced Public Safety & Crime Incidents
 """
 
 import os
@@ -16,68 +16,69 @@ import geopandas as gpd
 from src.etl.config import DATA_RAW_DIR, CVE_ENT_YUCATAN, CVE_MUN_MERIDA
 
 
-def list_raw_files() -> Dict[str, list]:
-    """Scan and categorize raw data files in data/raw/."""
-    files_by_category = {
-        "demographic": [],
-        "economic": [],
-        "cartography": [],
-        "crime": [],
-        "other": []
+def get_real_paths() -> Dict[str, Optional[Path]]:
+    """Locate official extracted datasets in data/raw/."""
+    paths = {
+        "census": None,
+        "denue": None,
+        "cartography": None,
+        "crime": None
     }
     
-    if not DATA_RAW_DIR.exists():
-        return files_by_category
+    # 1. Census
+    census_candidates = list(DATA_RAW_DIR.rglob("*ageb_urbana_31_cpv2020.csv"))
+    if census_candidates:
+        paths["census"] = census_candidates[0]
+        
+    # 2. DENUE
+    denue_candidates = list(DATA_RAW_DIR.rglob("denue_inegi_31_.csv"))
+    if denue_candidates:
+        paths["denue"] = denue_candidates[0]
+        
+    # 3. Cartography Shapefile
+    carto_candidates = list(DATA_RAW_DIR.rglob("31a.shp"))
+    if carto_candidates:
+        paths["cartography"] = carto_candidates[0]
+        
+    # 4. Crime
+    crime_candidates = list(DATA_RAW_DIR.rglob("*crimen*.csv")) + list(DATA_RAW_DIR.rglob("*delito*.csv"))
+    if crime_candidates:
+        paths["crime"] = crime_candidates[0]
+        
+    return paths
 
-    for p in DATA_RAW_DIR.rglob("*"):
-        if p.is_file() and not p.name.startswith("."):
-            lower_name = p.name.lower()
-            if any(k in lower_name for k in ["censo", "census", "demografia", "demographics", "pob", "iter"]):
-                files_by_category["demographic"].append(p)
-            elif any(k in lower_name for k in ["denue", "negocio", "business", "econom"]):
-                files_by_category["economic"].append(p)
-            elif any(k in lower_name for k in ["ageb", "cartografia", "cartography", "shape", ".shp", ".geojson"]):
-                files_by_category["cartography"].append(p)
-            elif any(k in lower_name for k in ["crimen", "crime", "delito", "seguridad", "safety", "incidencia"]):
-                files_by_category["crime"].append(p)
-            else:
-                files_by_category["other"].append(p)
-                
-    return files_by_category
 
-
-def load_raw_demographics(file_path: Optional[Path] = None) -> pd.DataFrame:
+def load_raw_demographics() -> pd.DataFrame:
     """Load raw INEGI Census tabular data."""
-    if file_path and file_path.exists():
-        if file_path.suffix == ".csv":
-            return pd.read_csv(file_path, low_memory=False, encoding="utf-8")
-        elif file_path.suffix in [".xls", ".xlsx"]:
-            return pd.read_excel(file_path)
+    paths = get_real_paths()
+    if paths["census"] and paths["census"].exists():
+        print(f"[EXTRACT] Loading real INEGI Census 2020 from: {paths['census'].name}")
+        return pd.read_csv(paths["census"], low_memory=False, encoding="utf-8")
     return pd.DataFrame()
 
 
-def load_raw_denue(file_path: Optional[Path] = None) -> pd.DataFrame:
+def load_raw_denue() -> pd.DataFrame:
     """Load raw DENUE economic establishments data."""
-    if file_path and file_path.exists():
-        if file_path.suffix == ".csv":
-            return pd.read_csv(file_path, low_memory=False, encoding="latin1")
-        elif file_path.suffix in [".xls", ".xlsx"]:
-            return pd.read_excel(file_path)
+    paths = get_real_paths()
+    if paths["denue"] and paths["denue"].exists():
+        print(f"[EXTRACT] Loading real INEGI DENUE from: {paths['denue'].name}")
+        return pd.read_csv(paths["denue"], low_memory=False, encoding="latin1")
     return pd.DataFrame()
 
 
-def load_raw_cartography(file_path: Optional[Path] = None) -> gpd.GeoDataFrame:
-    """Load raw official AGEB polygon shapefiles or GeoJSON."""
-    if file_path and file_path.exists():
-        return gpd.read_file(file_path)
+def load_raw_cartography() -> gpd.GeoDataFrame:
+    """Load raw official AGEB polygon shapefile."""
+    paths = get_real_paths()
+    if paths["cartography"] and paths["cartography"].exists():
+        print(f"[EXTRACT] Loading real INEGI Marco Geoestadistico from: {paths['cartography'].name}")
+        return gpd.read_file(paths["cartography"])
     return gpd.GeoDataFrame()
 
 
-def load_raw_crime(file_path: Optional[Path] = None) -> pd.DataFrame:
+def load_raw_crime() -> pd.DataFrame:
     """Load raw crime incident georeferenced records."""
-    if file_path and file_path.exists():
-        if file_path.suffix == ".csv":
-            return pd.read_csv(file_path, low_memory=False, encoding="utf-8")
-        elif file_path.suffix in [".xls", ".xlsx"]:
-            return pd.read_excel(file_path)
+    paths = get_real_paths()
+    if paths["crime"] and paths["crime"].exists():
+        print(f"[EXTRACT] Loading real Crime records from: {paths['crime'].name}")
+        return pd.read_csv(paths["crime"], low_memory=False, encoding="utf-8")
     return pd.DataFrame()

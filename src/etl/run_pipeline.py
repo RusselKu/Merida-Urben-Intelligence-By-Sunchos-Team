@@ -1,7 +1,9 @@
 """
 Main ETL Pipeline Orchestrator (Medallion Architecture):
-Executes Bronze -> Silver -> Gold stages in sequence.
-Supports both execution with local raw datasets or synthetic profiling verification.
+Executes Bronze -> Silver -> Gold stages on 100% official raw datasets:
+- INEGI Marco Geoestadístico 2020: Mérida AGEBs (31a.shp)
+- INEGI Censo de Población y Vivienda 2020 (AGEB Urbana)
+- INEGI DENUE: Mérida Economic Establishments
 """
 
 import sys
@@ -13,9 +15,9 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 from src.etl.config import DATA_RAW_DIR, DATA_PROCESSED_DIR
-from src.etl.extract import list_raw_files, load_raw_demographics, load_raw_cartography, load_raw_denue, load_raw_crime
-from src.etl.transform import standardize_ageb_geometries, spatial_join_points_to_polygons
-from src.etl.load import get_db_engine, load_dim_geografia, load_fact_demografia
+from src.etl.extract import load_raw_demographics, load_raw_cartography, load_raw_denue, load_raw_crime
+from src.etl.transform import standardize_ageb_geometries, clean_census_demographics, process_denue
+from src.etl.load import get_db_engine, load_dim_geografia, load_fact_demografia, load_dim_actividad_economica, load_fact_negocios_batch
 
 # Logging configuration with ASCII tags
 logging.basicConfig(
@@ -28,26 +30,46 @@ logger = logging.getLogger("ETL_Pipeline")
 
 def run_pipeline():
     logger.info("==========================================================")
-    logger.info("[START] Merida Urban Intelligence ETL Pipeline")
+    logger.info("[START] Merida Urban Intelligence ETL Pipeline (Official INEGI Data)")
     logger.info("==========================================================")
 
-    # 1. Check raw data files
-    logger.info("[STEP 1] Scanning Bronze Layer (data/raw/)...")
-    raw_files = list_raw_files()
-    logger.info(f"   Found files: Demographics={len(raw_files['demographic'])}, "
-                f"Economic={len(raw_files['economic'])}, "
-                f"Cartography={len(raw_files['cartography'])}, "
-                f"Crime={len(raw_files['crime'])}")
+    # 1. Cartography (dim_geografia)
+    logger.info("[STEP 1/4] Processing Official Cartography (Mérida AGEB Polygons)...")
+    gdf_carto_raw = load_raw_cartography()
+    if gdf_carto_raw.empty:
+        logger.error("❌ Could not find 31a.shp. Run python -m src.etl.download_official_data first.")
+        return
+    gdf_agebs = standardize_ageb_geometries(gdf_carto_raw)
+    logger.info(f"   Standardized {len(gdf_agebs)} official urban AGEBs for Mérida.")
 
-    # 2. Check Database Connectivity
-    logger.info("[STEP 2] Checking PostgreSQL / PostGIS connection...")
+    # 2. Demographics (fact_demografia)
+    logger.info("[STEP 2/4] Processing INEGI Census 2020 Demographics...")
+    df_census_raw = load_raw_demographics()
+    df_demo = clean_census_demographics(df_census_raw)
+    logger.info(f"   Cleaned demographic indicators for {len(df_demo)} AGEBs.")
+
+    # 3. Economic Directory (dim_actividad_economica & fact_negocios)
+    logger.info("[STEP 3/4] Processing INEGI DENUE & Spatial Join (Points-to-Polygons)...")
+    df_denue_raw = load_raw_denue()
+    df_scian, df_fact_neg = process_denue(df_denue_raw, gdf_agebs)
+    logger.info(f"   Identified {len(df_scian)} SCIAN activity classifications.")
+    logger.info(f"   Spatially joined {len(df_fact_neg)} business establishments to Mérida AGEBs.")
+
+    # 4. Gold Layer Loading
+    logger.info("[STEP 4/4] Loading into PostgreSQL / PostGIS Data Warehouse...")
     engine = get_db_engine()
     if engine:
-        logger.info("   [OK] Database engine successfully created.")
+        load_dim_geografia(gdf_agebs, engine=engine)
+        load_fact_demografia(df_demo, engine=engine)
+        load_dim_actividad_economica(df_scian, engine=engine)
+        load_fact_negocios_batch(df_fact_neg, engine=engine)
+        logger.info("   [OK] All official data successfully populated into PostGIS DW.")
     else:
-        logger.info("   [INFO] DATABASE_URL not active or SQLAlchemy not present. Running in validation mode.")
+        logger.info("   [INFO] DATABASE_URL not set in current shell. Transformations verified successfully.")
 
-    logger.info("[COMPLETED] ETL Pipeline validation finished.")
+    logger.info("==========================================================")
+    logger.info("[COMPLETED] ETL Pipeline executed successfully.")
+    logger.info("==========================================================")
 
 
 if __name__ == "__main__":

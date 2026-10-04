@@ -94,17 +94,21 @@ def clean_census_demographics(df_census: pd.DataFrame) -> pd.DataFrame:
     df["poblacion_total"] = to_clean_int("POBTOT")
     df["poblacion_masculina"] = to_clean_int("POBMAS")
     df["poblacion_femenina"] = to_clean_int("POBFEM")
-    df["poblacion_15_64"] = to_clean_int("P_15A64")
-    df["poblacion_65_mas"] = to_clean_int("P_65YMAS")
+    # Official CPV 2020 AGEB/manzana mnemonics (INEGI descriptor fd_agebmza_urbana_cpv2020):
+    #   POB0_14, POB15_64, POB65_MAS -> broad age groups
+    #   PEA, PE_INAC                 -> economically active / inactive population (12 years and over)
+    df["poblacion_0_14"] = to_clean_int("POB0_14")
+    df["poblacion_15_64"] = to_clean_int("POB15_64")
+    df["poblacion_65_mas"] = to_clean_int("POB65_MAS")
     df["poblacion_pea"] = to_clean_int("PEA")
-    df["poblacion_pnea"] = to_clean_int("PNEA")
+    df["poblacion_pnea"] = to_clean_int("PE_INAC")
     df["total_viviendas"] = to_clean_int("VIVTOT")
 
-    # Estimate 0-14 population if P_0A14 is present or by remainder
-    if "P_0A14" in df.columns:
-        df["poblacion_0_14"] = to_clean_int("P_0A14")
-    else:
-        df["poblacion_0_14"] = (df["poblacion_total"] - df["poblacion_15_64"] - df["poblacion_65_mas"]).clip(lower=0)
+    # Fail loudly if the age-group mnemonics are missing instead of silently
+    # assigning the whole population to the 0-14 group.
+    missing = [c for c in ("POB0_14", "POB15_64", "POB65_MAS", "PE_INAC") if c not in df.columns]
+    if missing:
+        raise KeyError(f"Census file is missing expected INEGI columns: {missing}")
 
     # Build 13-character CVEGEO (31 + 050 + LOC(4) + AGEB(4))
     ent = df["ENTIDAD"].astype(str).str.zfill(2)

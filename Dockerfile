@@ -16,6 +16,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# Configure Python environment
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
@@ -25,4 +29,4 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Default command runs the complete ETL pipeline
-CMD ["python", "src/etl/run_pipeline.py"]
+CMD ["python", "-m", "src.etl.run_pipeline"]

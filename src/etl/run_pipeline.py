@@ -10,7 +10,12 @@ import sys
 import logging
 from pathlib import Path
 
-# Configure UTF-8 for standard output on Windows
+# Add project root to sys.path
+BASE_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(BASE_ROOT) not in sys.path:
+    sys.path.insert(0, str(BASE_ROOT))
+
+# Configure UTF-8 for standard output
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
@@ -65,7 +70,7 @@ def run_pipeline():
         load_fact_negocios_batch(df_fact_neg, engine=engine)
         logger.info("   [OK] All official data successfully populated into PostGIS DW.")
     else:
-        logger.info("   [INFO] DATABASE_URL not set in current shell. Transformations verified successfully.")
+        logger.info("   [INFO] DATABASE_URL not set in environment. Transformations verified successfully.")
 
     logger.info("==========================================================")
     logger.info("[COMPLETED] ETL Pipeline executed successfully.")

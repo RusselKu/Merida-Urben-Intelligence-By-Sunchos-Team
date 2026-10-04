@@ -11,9 +11,11 @@ services:
       - ./data:/app/data
       - ./outputs:/app/outputs
       - ./src:/app/src
+      - ./sql:/app/sql
     environment:
       - PYTHONUNBUFFERED=1
-    command: python src/etl/run_pipeline.py
+      - PYTHONPATH=/app
+    command: python -m src.etl.run_pipeline
 
   # FastAPI Backend Service (For testing local API)
   backend-api:
@@ -28,4 +30,8 @@ services:
     volumes:
       - ./src:/app/src
       - ./data:/app/data
+      - ./outputs:/app/outputs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app
     command: uvicorn src.backend.main:app --host 0.0.0.0 --port 8000 --reload

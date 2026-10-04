@@ -62,7 +62,7 @@ for _, r in df_demo.iterrows():
     p_pea = int(r['poblacion_pea'])
     p_pnea = int(r['poblacion_pnea'])
     viv = int(r['total_viviendas'])
-    lines.append(f"INSERT INTO fact_demografia (cvegeo, poblacion_total, poblacion_masculina, poblacion_femenina, poblacion_0_14, poblacion_15_64, poblacion_65_mas, poblacion_pea, poblacion_pnea, total_viviendas) VALUES ('{cve}', {p_tot}, {p_mas}, {p_fem}, {p_0_14}, {p_15_64}, {p_65}, {p_pea}, {p_pnea}, {viv}) ON CONFLICT (cvegeo) DO UPDATE SET poblacion_total = EXCLUDED.poblacion_total, poblacion_pea = EXCLUDED.poblacion_pea;")
+    lines.append(f"INSERT INTO fact_demografia (cvegeo, poblacion_total, poblacion_masculina, poblacion_femenina, poblacion_0_14, poblacion_15_64, poblacion_65_mas, poblacion_pea, poblacion_pnea, total_viviendas) VALUES ('{cve}', {p_tot}, {p_mas}, {p_fem}, {p_0_14}, {p_15_64}, {p_65}, {p_pea}, {p_pnea}, {viv}) ON CONFLICT (cvegeo) DO UPDATE SET poblacion_total = EXCLUDED.poblacion_total, poblacion_masculina = EXCLUDED.poblacion_masculina, poblacion_femenina = EXCLUDED.poblacion_femenina, poblacion_0_14 = EXCLUDED.poblacion_0_14, poblacion_15_64 = EXCLUDED.poblacion_15_64, poblacion_65_mas = EXCLUDED.poblacion_65_mas, poblacion_pea = EXCLUDED.poblacion_pea, poblacion_pnea = EXCLUDED.poblacion_pnea, total_viviendas = EXCLUDED.total_viviendas;")
 
 out_file = Path("sql/02_load_real_inegi_data.sql")
 out_file.write_text("\n".join(lines), encoding="utf-8")

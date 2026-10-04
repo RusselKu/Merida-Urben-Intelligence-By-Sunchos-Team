@@ -113,10 +113,14 @@ def load_fact_demografia(df_demo: pd.DataFrame, engine=None) -> int:
                 )
                 ON CONFLICT (cvegeo) DO UPDATE SET
                     poblacion_total = EXCLUDED.poblacion_total,
-                    poblacion_pea = EXCLUDED.poblacion_pea,
+                    poblacion_masculina = EXCLUDED.poblacion_masculina,
+                    poblacion_femenina = EXCLUDED.poblacion_femenina,
                     poblacion_0_14 = EXCLUDED.poblacion_0_14,
                     poblacion_15_64 = EXCLUDED.poblacion_15_64,
-                    poblacion_65_mas = EXCLUDED.poblacion_65_mas;
+                    poblacion_65_mas = EXCLUDED.poblacion_65_mas,
+                    poblacion_pea = EXCLUDED.poblacion_pea,
+                    poblacion_pnea = EXCLUDED.poblacion_pnea,
+                    total_viviendas = EXCLUDED.total_viviendas;
             """)
             conn.execute(stmt, {
                 "cvegeo": cvegeo, "tot": pob_tot, "mas": pob_mas, "fem": pob_fem,

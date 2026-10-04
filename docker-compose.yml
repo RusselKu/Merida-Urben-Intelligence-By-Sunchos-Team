@@ -1,0 +1,31 @@
+services:
+  # ETL Pipeline Service
+  etl-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: merida_urban_etl
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+      - ./src:/app/src
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python src/etl/run_pipeline.py
+
+  # FastAPI Backend Service (For testing local API)
+  backend-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: merida_urban_api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src
+      - ./data:/app/data
+    command: uvicorn src.backend.main:app --host 0.0.0.0 --port 8000 --reload

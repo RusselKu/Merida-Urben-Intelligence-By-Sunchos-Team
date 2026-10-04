@@ -94,3 +94,23 @@ CREATE TABLE IF NOT EXISTS fact_crimen (
 CREATE INDEX IF NOT EXISTS idx_fact_crimen_cvegeo ON fact_crimen(cvegeo);
 CREATE INDEX IF NOT EXISTS idx_fact_crimen_categoria ON fact_crimen(categoria_delito);
 CREATE INDEX IF NOT EXISTS idx_fact_crimen_geom ON fact_crimen USING GIST(geom_punto);
+CREATE INDEX IF NOT EXISTS idx_fact_crimen_tiempo_id ON fact_crimen(tiempo_id);
+CREATE INDEX IF NOT EXISTS idx_fact_negocios_tiempo_id ON fact_negocios(tiempo_id);
+
+-- =============================================================================
+-- 8. Row Level Security (RLS) & Access Policies
+-- =============================================================================
+ALTER TABLE dim_geografia ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dim_tiempo ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dim_actividad_economica ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fact_demografia ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fact_negocios ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fact_crimen ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read on dim_geografia" ON dim_geografia FOR SELECT TO anon, authenticated, public USING (true);
+CREATE POLICY "Allow public read on dim_tiempo" ON dim_tiempo FOR SELECT TO anon, authenticated, public USING (true);
+CREATE POLICY "Allow public read on dim_actividad_economica" ON dim_actividad_economica FOR SELECT TO anon, authenticated, public USING (true);
+CREATE POLICY "Allow public read on fact_demografia" ON fact_demografia FOR SELECT TO anon, authenticated, public USING (true);
+CREATE POLICY "Allow public read on fact_negocios" ON fact_negocios FOR SELECT TO anon, authenticated, public USING (true);
+CREATE POLICY "Allow public read on fact_crimen" ON fact_crimen FOR SELECT TO anon, authenticated, public USING (true);
+

@@ -3,7 +3,8 @@
 -- =============================================================================
 
 -- Consolidated Territorial KPI View by AGEB
-CREATE OR REPLACE VIEW v_kpis_territoriales AS
+CREATE OR REPLACE VIEW v_kpis_territoriales
+WITH (security_invoker = true) AS
 WITH metricas_negocios AS (
     SELECT 
         fn.cvegeo,

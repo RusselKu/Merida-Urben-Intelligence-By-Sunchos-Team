@@ -1,11 +1,11 @@
 -- =============================================================================
--- MÉRIDA URBAN INTELLIGENCE - DATA WAREHOUSE SCHEMA (PostgreSQL / PostGIS)
+-- MERIDA URBAN INTELLIGENCE - DATA WAREHOUSE SCHEMA (PostgreSQL / PostGIS)
 -- =============================================================================
 
--- 1. Habilitar extensión espacial PostGIS
+-- 1. Enable PostGIS Spatial Extension
 CREATE EXTENSION IF NOT EXISTS postgis;
 
--- 2. Tabla Dimensional: Geografía (AGEB / Polígonos de Mérida)
+-- 2. Dimension Table: Geography (Urban AGEB Polygons of Mérida)
 CREATE TABLE IF NOT EXISTS dim_geografia (
     cvegeo VARCHAR(20) PRIMARY KEY,
     cve_ent VARCHAR(2) NOT NULL DEFAULT '31',
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS dim_geografia (
 CREATE INDEX IF NOT EXISTS idx_dim_geografia_geom4326 ON dim_geografia USING GIST(geom_4326);
 CREATE INDEX IF NOT EXISTS idx_dim_geografia_geom6372 ON dim_geografia USING GIST(geom_6372);
 
--- 3. Tabla Dimensional: Tiempo
+-- 3. Dimension Table: Date / Time
 CREATE TABLE IF NOT EXISTS dim_tiempo (
     tiempo_id SERIAL PRIMARY KEY,
     fecha DATE UNIQUE NOT NULL,
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS dim_tiempo (
 
 CREATE INDEX IF NOT EXISTS idx_dim_tiempo_fecha ON dim_tiempo(fecha);
 
--- 4. Tabla Dimensional: Actividad Económica (SCIAN)
+-- 4. Dimension Table: Economic Activity (SCIAN Taxonomy)
 CREATE TABLE IF NOT EXISTS dim_actividad_economica (
     scian_id VARCHAR(10) PRIMARY KEY,
     codigo_actividad VARCHAR(10) NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS dim_actividad_economica (
     categoria_macro VARCHAR(50) NOT NULL -- 'Comercio', 'Servicios', 'Industria', 'Otro'
 );
 
--- 5. Tabla de Hechos: Demografía (Censo INEGI)
+-- 5. Fact Table: Demographics (INEGI Population & Housing Census)
 CREATE TABLE IF NOT EXISTS fact_demografia (
     fact_demografia_id SERIAL PRIMARY KEY,
     cvegeo VARCHAR(20) NOT NULL REFERENCES dim_geografia(cvegeo) ON DELETE CASCADE,
@@ -57,15 +57,15 @@ CREATE TABLE IF NOT EXISTS fact_demografia (
     poblacion_0_14 INT NOT NULL DEFAULT 0,
     poblacion_15_64 INT NOT NULL DEFAULT 0,
     poblacion_65_mas INT NOT NULL DEFAULT 0,
-    poblacion_pea INT NOT NULL DEFAULT 0, -- Población Económicamente Activa
-    poblacion_pnea INT NOT NULL DEFAULT 0, -- No Activa
+    poblacion_pea INT NOT NULL DEFAULT 0, -- Economically Active Population
+    poblacion_pnea INT NOT NULL DEFAULT 0, -- Non-Active Population
     total_viviendas INT NOT NULL DEFAULT 0,
     CONSTRAINT uk_fact_demografia_cvegeo UNIQUE (cvegeo)
 );
 
 CREATE INDEX IF NOT EXISTS idx_fact_demografia_cvegeo ON fact_demografia(cvegeo);
 
--- 6. Tabla de Hechos: Negocios (DENUE)
+-- 6. Fact Table: Business Establishments (INEGI DENUE)
 CREATE TABLE IF NOT EXISTS fact_negocios (
     fact_negocio_id SERIAL PRIMARY KEY,
     cvegeo VARCHAR(20) NOT NULL REFERENCES dim_geografia(cvegeo) ON DELETE CASCADE,
@@ -80,14 +80,14 @@ CREATE INDEX IF NOT EXISTS idx_fact_negocios_cvegeo ON fact_negocios(cvegeo);
 CREATE INDEX IF NOT EXISTS idx_fact_negocios_scian ON fact_negocios(scian_id);
 CREATE INDEX IF NOT EXISTS idx_fact_negocios_geom ON fact_negocios USING GIST(geom_punto);
 
--- 7. Tabla de Hechos: Criminalidad e Incidencias Delictivas
+-- 7. Fact Table: Public Safety & Crime Incidents
 CREATE TABLE IF NOT EXISTS fact_crimen (
     fact_crimen_id SERIAL PRIMARY KEY,
     cvegeo VARCHAR(20) NOT NULL REFERENCES dim_geografia(cvegeo) ON DELETE CASCADE,
     tiempo_id INT REFERENCES dim_tiempo(tiempo_id),
     categoria_delito VARCHAR(100) NOT NULL,
     tipo_delito VARCHAR(150) NOT NULL,
-    periodo_dia VARCHAR(50), -- 'Mañana', 'Tarde', 'Noche', 'Madrugada'
+    periodo_dia VARCHAR(50), -- 'Morning', 'Afternoon', 'Evening', 'Night'
     geom_punto GEOMETRY(Point, 4326)
 );
 

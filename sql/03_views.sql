@@ -1,8 +1,8 @@
 -- =============================================================================
--- MÉRIDA URBAN INTELLIGENCE - ANALYTICAL VIEWS FOR REQUIRED KPIS
+-- MERIDA URBAN INTELLIGENCE - ANALYTICAL VIEWS FOR REQUIRED KPIS
 -- =============================================================================
 
--- Vista Consolidada de KPIs Territoriales por AGEB
+-- Consolidated Territorial KPI View by AGEB
 CREATE OR REPLACE VIEW v_kpis_territoriales AS
 WITH metricas_negocios AS (
     SELECT 
@@ -36,7 +36,7 @@ SELECT
     g.nom_asentamiento,
     g.area_km2,
     
-    -- Demográficos
+    -- Demographic KPIs
     COALESCE(fd.poblacion_total, 0) AS poblacion_total,
     ROUND(COALESCE(fd.poblacion_total, 0) / NULLIF(g.area_km2, 0), 2) AS densidad_poblacion_km2,
     ROUND((COALESCE(fd.poblacion_pea, 0)::NUMERIC / NULLIF((fd.poblacion_total - fd.poblacion_0_14), 0)) * 100, 2) AS tasa_pea_porcentaje,
@@ -44,20 +44,20 @@ SELECT
     COALESCE(fd.poblacion_15_64, 0) AS poblacion_15_64,
     COALESCE(fd.poblacion_65_mas, 0) AS poblacion_65_mas,
     
-    -- Económicos
+    -- Economic KPIs
     COALESCE(mn.total_negocios, 0) AS total_negocios,
     ROUND(COALESCE(mn.total_negocios, 0) / NULLIF(g.area_km2, 0), 2) AS densidad_negocios_km2,
     ROUND((COALESCE(mn.total_negocios, 0)::NUMERIC / NULLIF(fd.poblacion_total, 0)) * 1000, 2) AS negocios_por_mil_hab,
     ROUND(COALESCE(mn.total_comercios, 0) / NULLIF(g.area_km2, 0), 2) AS densidad_comercio_km2,
     ROUND(COALESCE(mn.total_servicios, 0) / NULLIF(g.area_km2, 0), 2) AS densidad_servicios_km2,
-    COALESCE(ad.sector_dominante, 'Sin actividad') AS actividad_economica_dominante,
+    COALESCE(ad.sector_dominante, 'No recorded activity') AS actividad_economica_dominante,
     
-    -- Seguridad
+    -- Public Safety KPIs
     COALESCE(mc.total_delitos, 0) AS total_delitos,
     ROUND((COALESCE(mc.total_delitos, 0)::NUMERIC / NULLIF(fd.poblacion_total, 0)) * 1000, 2) AS tasa_delictiva_por_mil_hab,
     ROUND(COALESCE(mc.total_delitos, 0)::NUMERIC / NULLIF(mn.total_negocios, 0), 3) AS ratio_delito_por_negocio,
     
-    -- Geometría
+    -- Spatial Geometry
     g.geom_4326
 
 FROM dim_geografia g

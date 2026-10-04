@@ -10,57 +10,57 @@
 
 ---
 
-## 📌 1. Visión General del Proyecto
+## 📌 1. Project Overview
 
-**Mérida Urban Intelligence** es una plataforma integral de inteligencia territorial y Data Warehouse Geoespacial diseñada para la ciudad de Mérida, Yucatán. El sistema resuelve el desafío crítico de integrar fuentes de datos heterogéneas que operan a distintas escalas espaciales y formatos (registros puntuales de latitud/longitud vs. polígonos geoestadísticos oficiales) para evaluar correlaciones socioespaciales, patrones de actividad económica y distribución de la criminalidad.
+**Mérida Urban Intelligence** is an end-to-end urban analytics platform and Geospatial Data Warehouse designed for the city of Mérida, Yucatán. The system addresses the core challenge of integrating heterogeneous datasets operating at disparate spatial resolutions and formats (point-level latitude/longitude records vs. official geo-statistical polygons) to evaluate socio-spatial correlations, economic activity clusters, and public safety distributions.
 
-### Objetivos Analíticos:
-1. **Consolidación Geoespacial**: Integrar fuentes demográficas (INEGI Censo), económicas (INEGI DENUE), cartográficas y de seguridad pública en una unidad geográfica estandarizada.
-2. **Data Warehouse Dimensional**: Modelar e implementar un esquema estrella/copo de nieve en **PostgreSQL con PostGIS habilitado** alojado en **Supabase**.
-3. **Analítica Espacial Avanzada**: Calcular métricas de autocorrelación espacial global y local (**Índice de Moran Global, LISA y Moran Bivariado**) mediante un backend en **FastAPI** impulsado por **PySAL / GeoPandas**.
-4. **Visualización Interactiva**: Desplegar un Dashboard en **React + MapLibre GL JS + ApexCharts** alojado en **Vercel** para la toma de decisiones basada en evidencia territorial.
+### Analytical Objectives:
+1. **Geospatial Consolidation**: Seamlessly integrate demographic data (INEGI Census 2020), economic activities (INEGI DENUE), official cartography, and georeferenced public safety records into a unified territorial grain.
+2. **Dimensional Data Warehouse**: Design and implement a star/snowflake schema in **PostgreSQL with PostGIS enabled**, hosted on **Supabase**.
+3. **Advanced Spatial Analytics**: Compute global and local spatial autocorrelation metrics (**Global Moran's I, LISA cluster maps, and Bivariate Moran's I**) via a **FastAPI** analytical engine powered by **PySAL / GeoPandas**.
+4. **Interactive Visualization**: Deploy an intuitive dashboard in **React + MapLibre GL JS + ApexCharts** hosted on **Vercel** for data-driven urban policy and analysis.
 
 ---
 
-## 🏗️ 2. Arquitectura del Sistema y Stack Tecnológico
+## 🏗️ 2. System Architecture & Tech Stack
 
 ```mermaid
 flowchart TD
-    subgraph Sources["Fuentes de Datos Crudas (Capa Bronce)"]
-        S1["INEGI Censo 2020<br/>(Demografía)"]
-        S2["INEGI DENUE<br/>(Negocios / Lat-Long)"]
-        S3["Cartografía INEGI<br/>(Polígonos Shapefile)"]
-        S4["Incidencias Delictivas<br/>(Puntos Lat-Long)"]
+    subgraph Sources["Raw Data Sources (Bronze Layer)"]
+        S1["INEGI Census 2020<br/>(Demographics)"]
+        S2["INEGI DENUE<br/>(Establishments / Lat-Long)"]
+        S3["INEGI Cartography<br/>(Official Polygons)"]
+        S4["Public Safety Data<br/>(Crime Points Lat-Long)"]
     end
 
-    subgraph ETL["Pipeline ETL Dockerizado (Capa Plata)"]
-        E1["Limpieza y Normalización<br/>(Python / Pandas)"]
-        E2["Conversión de CRS<br/>(EPSG:4326 / EPSG:6372)"]
-        E3["Spatial Join Punto-a-Polígono<br/>(GeoPandas / Shapely)"]
+    subgraph ETL["Dockerized ETL Pipeline (Silver Layer)"]
+        E1["Cleaning & Standardization<br/>(Python / Pandas)"]
+        E2["CRS Normalization<br/>(EPSG:4326 / EPSG:6372)"]
+        E3["Point-in-Polygon Spatial Join<br/>(GeoPandas / Shapely)"]
         E1 --> E2 --> E3
     end
 
-    subgraph DW["Data Warehouse PostGIS (Capa Oro - Supabase)"]
-        D1[("dim_geografia<br/>(Polígonos AGEB + Índices GIST)")]
-        D2[("dim_tiempo<br/>(Fechas / Periodos)")]
-        D3[("dim_actividad_economica<br/>(SCIAN Sectores)")]
+    subgraph DW["PostGIS Data Warehouse (Gold Layer - Supabase)"]
+        D1[("dim_geografia<br/>(AGEB Polygons + GIST Indexes)")]
+        D2[("dim_tiempo<br/>(Date / Temporal Grain)")]
+        D3[("dim_actividad_economica<br/>(SCIAN Taxonomy)")]
         F1[("fact_demografia")]
         F2[("fact_negocios")]
         F3[("fact_crimen")]
-        V1[("v_kpis_territoriales<br/>(Vistas Analíticas)")]
+        V1[("v_kpis_territoriales<br/>(Analytical Views)")]
     end
 
-    subgraph API["Backend Analítico (FastAPI)"]
-        A1["Cálculo de Moran's I<br/>(PySAL / libpysal / esda)"]
-        A2["Clusters LISA (High-High, Low-Low)"]
-        A3["Moran Bivariado (Crimen vs Negocios)"]
-        A4["Endpoints GeoJSON REST"]
+    subgraph API["Spatial Analytics Engine (FastAPI)"]
+        A1["Moran's I Computation<br/>(PySAL / libpysal / esda)"]
+        A2["LISA Clusters (High-High, Low-Low)"]
+        A3["Bivariate Moran (Crime vs Business)"]
+        A4["GeoJSON REST Endpoints"]
     end
 
-    subgraph UI["Frontend & Dashboard (Vercel)"]
-        U1["MapLibre GL JS<br/>(Mapas Coropléticos & Calor)"]
-        U2["ApexCharts<br/>(KPIs & Correlaciones)"]
-        U3["Filtros Multidimensionales"]
+    subgraph UI["Frontend Dashboard (Vercel)"]
+        U1["MapLibre GL JS<br/>(Choropleths & Heatmaps)"]
+        U2["ApexCharts<br/>(KPI Cards & Correlations)"]
+        U3["Multidimensional Filters"]
     end
 
     Sources --> ETL
@@ -72,27 +72,27 @@ flowchart TD
 
 ---
 
-## 🗺️ 3. Estrategia Geográfica e Integración Espacial
+## 🗺️ 3. Geographic Strategy & Spatial Integration
 
-### Selección de la Unidad de Análisis Territorial
-Para conciliar las distintas granularidades de los datos disponibles, se evaluaron tres alternativas:
+### Territorial Unit Selection
+To integrate datasets with varying native spatial granularities, three alternatives were evaluated:
 
-| Unidad Geográfica | Ventajas | Desventajas | Decisión |
+| Geographic Unit | Advantages | Disadvantages | Decision |
 | :--- | :--- | :--- | :--- |
-| **Manzana (Nivel micro)** | Máxima resolución espacial. | Alto porcentaje de datos demográficos censurados por confidencialidad (secreto estadístico INEGI); polígonos complejos. | Descartada |
-| **AGEB Urbana (Área Geoestadística Básica)** | Disponibilidad completa de variables censales (PEA, grupos de edad); límites oficiales validados; balance ideal entre detalle y significancia estadística. | Variación en el tamaño físico de los polígonos hacia la periferia. | **SELECCIONADA (Recomendada)** |
-| **Cuadrantes / Grillas Hexagonales (H3)** | Celdas de área homogénea que mitigan el MAUP. | Desconectadas de los límites censales oficiales de INEGI; requiere imputación/interpolación espacial con pérdida de precisión. | Descartada para DW base |
+| **Manzana (City Block)** | Highest spatial resolution. | Extensive statistical suppression (secreto estadístico) in demographic variables; complex polygon topology. | Rejected |
+| **Urban AGEB (Basic Geo-statistical Area)** | Complete availability of census indicators (EAP, age groups); official validated boundaries; ideal balance between detail and statistical significance. | Variations in physical polygon area towards peri-urban fringes. | **SELECTED (Optimal)** |
+| **Hexagonal Grids (H3 / Equal Area)** | Homogeneous cell sizes mitigating MAUP scale effects. | Disconnected from official INEGI administrative units; requires spatial interpolation with potential error propagation. | Rejected for base DW |
 
-### Integración Punto-a-Polígono (Spatial Join)
-1. **Normalización de Coordenadas (CRS)**: Se reciben registros puntuales de DENUE e incidencias de criminalidad en coordenadas geográficas `WGS84` (`EPSG:4326`).
-2. **Validación de Geometría**: Tratamiento de puntos nulos, fuera de rango o ubicados fuera del municipio de Mérida.
-3. **Cruce Espacial**: Ejecución de predicado topológico `ST_Within(point, polygon)` o `gpd.sjoin(how='inner', predicate='within')` asignando a cada registro puntual el identificador único `cvegeo` del AGEB correspondiente.
+### Point-to-Polygon Spatial Integration (Spatial Join)
+1. **Coordinate Reference System (CRS) Normalization**: All point entities (DENUE establishments and crime incident coordinates) are converted to `WGS84` (`EPSG:4326`).
+2. **Topological Validation**: Filter invalid/null coordinates and points outside the official municipality boundaries of Mérida (Code `31050`).
+3. **Spatial Join**: Execute spatial containment predicates (`ST_Within(point, polygon)` / `gpd.sjoin(how='inner', predicate='within')`), assigning the unique `cvegeo` identifier to each point.
 
 ---
 
-## 🗄️ 4. Modelo Dimensional del Data Warehouse (PostgreSQL / PostGIS)
+## 🗄️ 4. Dimensional Data Warehouse Model (PostgreSQL / PostGIS)
 
-El Data Warehouse implementa un modelo multidimensional optimizado para consultas analíticas de agregación y análisis espacial:
+The Data Warehouse implements a multidimensional dimensional schema optimized for aggregations and spatial queries:
 
 ```mermaid
 erDiagram
@@ -105,9 +105,9 @@ erDiagram
 
     dim_geografia {
         varchar cvegeo PK
-        varchar nom_colonia
+        varchar nom_asentamiento
         geometry geom_4326 "GIST Index"
-        geometry geom_6372 "Meters for Area"
+        geometry geom_6372 "Metric Area"
         numeric area_km2
     }
 
@@ -121,21 +121,19 @@ erDiagram
 
     dim_actividad_economica {
         varchar scian_id PK
-        varchar sector
-        varchar subsector
-        varchar descripcion
+        varchar sector_codigo
+        varchar sector_nombre
+        varchar categoria_macro
     }
 
     fact_demografia {
         int fact_demografia_id PK
         varchar cvegeo FK
         int poblacion_total
-        int poblacion_masculina
-        int poblacion_femenina
         int poblacion_pea
-        int pob_0_14
-        int pob_15_64
-        int pob_65_mas
+        int poblacion_0_14
+        int poblacion_15_64
+        int poblacion_65_mas
     }
 
     fact_negocios {
@@ -159,151 +157,158 @@ erDiagram
 
 ---
 
-## 📊 5. Indicadores Clave de Rendimiento (KPIs Requeridos)
+## 📊 5. Required Key Performance Indicators (KPIs)
 
-| Categoría | KPI | Fórmula / Definición | Grano de Salida |
+| Category | KPI Name | Mathematical Definition / Formula | Output Grain |
 | :--- | :--- | :--- | :--- |
-| **Demografía** | **Población Total** | $\sum \text{Población por AGEB}$ | AGEB |
-| **Demografía** | **Densidad de Población** | $\frac{\text{Población Total}}{\text{Área en } \text{km}^2}$ | Hab / $\text{km}^2$ |
-| **Demografía** | **Tasa de PEA** | $\frac{\text{Población Económicamente Activa (PEA)}}{\text{Población } \ge 12 \text{ años}} \times 100$ | Porcentaje (%) |
-| **Demografía** | **Población por Grupo de Edad** | Conteo y proporción en cohortes: `0-14`, `15-64`, `65+` | AGEB |
-| **Economía** | **Total de Negocios** | $\text{Count}(\text{Establecimientos DENUE})$ | Conteo por AGEB |
-| **Economía** | **Densidad de Negocios** | $\frac{\text{Total de Negocios}}{\text{Área en } \text{km}^2}$ | Negocios / $\text{km}^2$ |
-| **Economía** | **Negocios por 1,000 Habitantes** | $\frac{\text{Total de Negocios}}{\text{Población Total}} \times 1,000$ | Tasa por 1k hab. |
-| **Economía** | **Densidad Comercial (Retail)** | $\frac{\text{Establecimientos Sector Comercio (SCIAN 46-47)}}{\text{Área en } \text{km}^2}$ | Comercios / $\text{km}^2$ |
-| **Economía** | **Densidad de Servicios** | $\frac{\text{Establecimientos Sector Servicios (SCIAN 54-81)}}{\text{Área en } \text{km}^2}$ | Servicios / $\text{km}^2$ |
-| **Economía** | **Actividad Económica Dominante** | $\text{Mode}(\text{Sector SCIAN})$ con mayor presencia | Sector dominante |
-| **Seguridad** | **Total de Incidencias Delictivas** | $\sum \text{Delitos asignados al polígono}$ | Conteo por AGEB |
-| **Seguridad** | **Tasa Delictiva** | $\frac{\text{Total de Delitos}}{\text{Población Total}} \times 1,000$ | Delitos / 1k hab. |
-| **Seguridad** | **Distribución Temporal y Tipo** | Delitos agrupados por categoría y periodo horario | Distribución |
-| **Seguridad** | **Ratio Delito / Actividad Económica** | $\frac{\text{Total de Delitos}}{\text{Total de Negocios}}$ | Índice relativo |
+| **Demographic** | **Total Population** | $\sum \text{Population per AGEB}$ | AGEB |
+| **Demographic** | **Population Density** | $\frac{\text{Total Population}}{\text{Area in } \text{km}^2}$ | Residents / $\text{km}^2$ |
+| **Demographic** | **EAP Rate** | $\frac{\text{Economically Active Population (EAP)}}{\text{Population } \ge 12 \text{ years}} \times 100$ | Percentage (%) |
+| **Demographic** | **Population by Age Group** | Headcounts and proportions for cohorts: `0-14`, `15-64`, `65+` | AGEB |
+| **Economic** | **Total Businesses** | $\text{Count}(\text{DENUE Establishments})$ | Count per AGEB |
+| **Economic** | **Business Density** | $\frac{\text{Total Businesses}}{\text{Area in } \text{km}^2}$ | Businesses / $\text{km}^2$ |
+| **Economic** | **Businesses per 1k Residents** | $\frac{\text{Total Businesses}}{\text{Total Population}} \times 1,000$ | Rate per 1k pop |
+| **Economic** | **Retail Density** | $\frac{\text{Retail Establishments (SCIAN 46-47)}}{\text{Area in } \text{km}^2}$ | Stores / $\text{km}^2$ |
+| **Economic** | **Service Density** | $\frac{\text{Service Establishments (SCIAN 54-81)}}{\text{Area in } \text{km}^2}$ | Services / $\text{km}^2$ |
+| **Economic** | **Dominant Economic Activity** | $\text{Mode}(\text{SCIAN Sector})$ by establishment count | Dominant sector |
+| **Public Safety** | **Total Crime Incidents** | $\sum \text{Georeferenced Incidents assigned to polygon}$ | Count per AGEB |
+| **Public Safety** | **Crime Rate** | $\frac{\text{Total Incidents}}{\text{Total Population}} \times 1,000$ | Incidents / 1k pop |
+| **Public Safety** | **Temporal & Category Breakdown** | Incidents grouped by crime type and time-of-day window | Distribution |
+| **Public Safety** | **Crime-to-Business Ratio** | $\frac{\text{Total Incidents}}{\text{Total Businesses}}$ | Relative index |
 
 ---
 
-## 🔬 6. Analítica Espacial (Fase 3)
+## 🔬 6. Spatial Analytics Engine (Phase 3)
 
-1. **Matriz de Pesos Espaciales ($W$)**: Se emplea una matriz de contigüidad **Queen** de primer orden sobre los polígonos de Mérida, estandarizada por filas ($W_{std}$).
-2. **Índice de Moran Global**:
+1. **Spatial Weights Matrix ($W$)**: Standard first-order **Queen contiguity matrix** row-standardized ($W_{std}$) over Mérida AGEBs.
+2. **Global Moran's I**:
    $$I = \frac{n}{\sum_{i} \sum_{j} w_{ij}} \frac{\sum_{i} \sum_{j} w_{ij} (x_i - \bar{x})(x_j - \bar{x})}{\sum_{i} (x_i - \bar{x})^2}$$
-   Evaluación de la hipótesis nula de aleatoriedad espacial con pseudo p-valores mediante permutaciones de Monte Carlo ($999$ iteraciones).
-3. **Análisis Local de Autocorrelación Espacial (LISA / Local Moran's I)**:
-   - **High-High (Hotspots)**: AGEBs con altos valores rodeados de vecinos con altos valores.
-   - **Low-Low (Coldspots)**: AGEBs con bajos valores rodeados de vecinos con bajos valores.
-   - **Outliers Espaciales**: *High-Low* y *Low-High*.
-4. **Moran Bivariado**:
-   Evaluación de la correlación espacial cruzada entre la variable independiente espacialmente rezagada $W y$ y la variable objetivo $x$ (ej. Concentración Comercial vs Delincuencia Patrimonial).
+   Statistical inference evaluated against 999 Monte Carlo permutations to compute pseudo p-values and z-scores.
+3. **Local Spatial Autocorrelation (LISA / Local Moran's I)**:
+   - **High-High (Hotspots)**: High values surrounded by high-value neighbors.
+   - **Low-Low (Coldspots)**: Low values surrounded by low-value neighbors.
+   - **Spatial Outliers**: *High-Low* and *Low-High*.
+4. **Bivariate Moran's I**:
+   Cross-correlation between an attribute $x$ and the spatial lag of another attribute $Wy$ (e.g., Commercial Density vs Public Safety Incidents).
 
 ---
 
-## 📂 7. Estructura del Repositorio
+## 📂 7. Repository Directory Structure
 
 ```text
 merida-urban-intelligence/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                 # Pipeline automatizado de CI/CD
+│       └── ci.yml                 # Automated CI/CD workflow
 ├── data/
-│   ├── raw/                       # Fuentes crudas inmutables (Censo, DENUE, Shapefiles)
-│   └── processed/                 # GeoJSONs y capas intermedias generadas
+│   ├── raw/                       # Immutable raw datasets (Census, DENUE, Shapefiles)
+│   └── processed/                 # Generated intermediate GeoJSONs and layers
 ├── docs/
-│   ├── data_dictionary.md         # Diccionario de datos y especificación de campos
-│   └── warehouse_model.png        # Diagrama entidad-relación dimensional
+│   ├── data_dictionary.md         # Data dictionary and field specs
+│   └── warehouse_model.png        # Dimensional ERD diagram
 ├── notebooks/
-│   ├── 01_data_profiling.ipynb    # Auditoría inicial y calidad de fuentes
-│   ├── 02_spatial_join_test.ipynb # Pruebas de integración punto a polígono
-│   └── 03_moran_analytics.ipynb   # Cálculos de Moran Global, LISA y Bivariado
+│   ├── 01_data_profiling.ipynb    # Data source profiling & spatial join POC
+│   ├── 02_spatial_join_test.ipynb # Point-to-polygon validation
+│   └── 03_moran_analytics.ipynb   # Global Moran, LISA & Bivariate analysis
 ├── outputs/
-│   ├── figures/                   # Gráficas de correlación y diagramas de Moran
-│   └── maps/                      # Mapas temáticos y coropléticos exportados
+│   ├── figures/                   # Exported correlation plots & Moran scatterplots
+│   └── maps/                      # Exported choropleth maps & GeoJSON layers
 ├── sql/
-│   ├── 01_schema.sql              # Creación de extensiones PostGIS, dimensiones y hechos
-│   ├── 02_load.sql                # Carga de datos validados y restricciones
-│   └── 03_views.sql               # Vistas analíticas para KPIs
+│   ├── 01_schema.sql              # PostGIS extensions, dimensions, and facts DDL
+│   ├── 02_load.sql                # Data loading and integrity constraints
+│   └── 03_views.sql               # Analytical views for required KPIs
 ├── src/
-│   ├── backend/                   # API FastAPI con PySAL y SDK Supabase
-│   ├── etl/                       # Scripts Python del pipeline de Arquitectura Medallón
-│   └── frontend/                  # Dashboard React + MapLibre GL JS + ApexCharts
-├── .env.example                   # Plantilla de variables de entorno
-├── .gitignore                     # Exclusiones de Git
-├── BUENAS_PRACTICAS.md            # Guía de estilo, Conventional Commits y PRs
-├── DISTRIBUCION_EQUIPO.md         # Matriz de roles y entregables individuales
-├── requirements.txt               # Dependencias fijadas de Python
-└── README.md                      # Documento principal de arquitectura
+│   ├── backend/                   # FastAPI REST API with PySAL & Supabase SDK
+│   ├── etl/                       # Medallion Architecture Python pipeline
+│   └── frontend/                  # React dashboard + MapLibre GL JS + ApexCharts
+├── .dockerignore                  # Docker build context exclusions
+├── .env.example                   # Environment configuration template
+├── .gitignore                     # Git exclusion rules
+├── BEST_PRACTICES.md              # Code standards, Conventional Commits & PR rules
+├── TEAM_DISTRIBUTION.md           # Team roles, deliverable matrix & rubric alignment
+├── Dockerfile                     # Geospatial container definition (GDAL/GEOS/PROJ)
+├── docker-compose.yml             # Container orchestration
+├── requirements.txt               # Pinned Python dependencies
+└── README.md                      # Primary project documentation
 ```
 
 ---
 
-## 🚀 8. Instrucciones de Reproducción y Puesta en Marcha
+## 🚀 8. Reproduction & Setup Instructions
 
-### Prerrequisitos
-* **Python** 3.10 o superior
-* **Node.js** 18 o superior
-* **Docker & Docker Compose** (para el pipeline ETL reproducible)
-* Cuenta en **Supabase** con proyecto PostgreSQL activo
+### Prerequisites
+* **Python** 3.10+
+* **Node.js** 18+
+* **Docker & Docker Compose**
+* **Supabase** account with an active PostgreSQL project
 
-### Paso 1: Clonar el Repositorio y Configurar Variables
+### Step 1: Clone Repository & Configure Environment
 ```bash
 git clone https://github.com/RusselKu/Merida-Urben-Intelligence-By-Sunchos-Team.git
 cd Merida-Urben-Intelligence-By-Sunchos-Team
 cp .env.example .env
 ```
-*Edita el archivo `.env` con las credenciales de tu proyecto de Supabase.*
+*Edit `.env` with your Supabase credentials and database connection string.*
 
-### Paso 2: Configuración del Entorno Python
+### Step 2: Python Virtual Environment Setup
 ```bash
 python -m venv .venv
-# En Windows PowerShell:
+# On Windows PowerShell:
 .\.venv\Scripts\Activate.ps1
-# En Linux/macOS:
+# On Linux / macOS:
 source .venv/bin/activate
 
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### Paso 3: Inicializar Base de Datos PostGIS en Supabase
-Ejecuta el script SQL en la consola SQL de tu proyecto en Supabase:
-1. `sql/01_schema.sql` (Habilita PostGIS y crea las tablas dimensionales).
-2. `sql/03_views.sql` (Crea las vistas para cálculo directo de KPIs).
+### Step 3: Run Database Schema on Supabase
+Execute the SQL scripts in the Supabase SQL Editor:
+1. `sql/01_schema.sql` (Enables PostGIS, dimensions, facts, and GIST indexes).
+2. `sql/03_views.sql` (Creates analytical views for direct KPI queries).
 
-### Paso 4: Ejecutar el Pipeline ETL (Carga a Supabase)
+### Step 4: Run the Reproducible ETL Pipeline
 ```bash
+# Using Python directly:
 python src/etl/run_pipeline.py
+
+# Or using Docker:
+docker compose up --build etl-pipeline
 ```
 
-### Paso 5: Levantar el Servidor Backend (FastAPI)
+### Step 5: Start the FastAPI Backend
 ```bash
 uvicorn src.backend.main:app --reload --port 8000
 ```
-*Documentación interactiva disponible en:* `http://localhost:8000/docs`
+*Interactive API documentation is available at:* `http://localhost:8000/docs`
 
-### Paso 6: Levantar el Frontend (React)
+### Step 6: Start the Frontend Application
 ```bash
 cd src/frontend
 npm install
 npm run dev
 ```
-*Dashboard disponible en:* `http://localhost:3000`
+*Dashboard will be available at:* `http://localhost:3000`
 
 ---
 
-## ⚠️ 9. Supuestos, Limitaciones y Calidad del Dato
+## ⚠️ 9. Assumptions, Caveats & Limitations
 
-1. **Problema de la Unidad de Área Modificable (MAUP)**:
-   La agregación de puntos de criminalidad y comercios a nivel AGEB sufre del efecto de escala y agregación. Los resultados deben interpretarse a nivel zonal sin incurrir en falacia ecológica (inferir comportamientos individuales a partir de métricas de área).
-2. **Cifra Negra de Delitos**:
-   Los registros de seguridad corresponden únicamente a incidencias reportadas o georreferenciadas formalmente; áreas con baja tasa de reporte pueden mostrar una criminalidad menor a la real.
-3. **Efecto Borde (Boundary Effect)**:
-   Los AGEBs periféricos de Mérida tienen menor número de vecinos inmediatos, lo que puede afectar la estabilidad de la matriz de pesos espaciales en el cálculo del Índice de Moran. Se aplican técnicas de corrección por vecinos más cercanos ($k$-NN) donde sea necesario.
+1. **Modifiable Areal Unit Problem (MAUP)**:
+   Aggregating point incidents and business records into AGEB polygons introduces potential scale and zone configuration effects. Findings should be interpreted as ecological patterns without committing ecological fallacies.
+2. **Crime Reporting Bias (Dark Figure of Crime)**:
+   Incident datasets represent reported offenses. Areas with varying citizen reporting rates may reflect differences in reporting tendencies rather than actual incidence.
+3. **Boundary Effects (Edge Effects)**:
+   Peripheral AGEBs on the outskirts of Mérida have fewer spatial neighbors, which can affect the sensitivity of spatial weight matrices. Distance-based $k$-NN neighbor models are evaluated to ensure robustness.
 
 ---
 
-## 👥 10. Equipo de Desarrollo (Sunchos Team)
+## 👥 10. Development Team (Sunchos Team)
 
-* **Russel** — Arquitectura de Datos, Docker & Pipeline ETL PostGIS *(Fase 1 y 2)*
-* **Rivaldo** — Backend FastAPI & Autocorrelación Espacial (PySAL / Moran's I) *(Fase 2 y 3)*
-* **Damián** — Frontend, MapLibre GL JS & Despliegue en Vercel *(Fase 3)*
-* **Bianca** — Análisis de Datos, Validación de KPIs & ApexCharts *(Fase 1 y 3)*
-* **Jonathan** — Calidad de Fuentes, Modelo Dimensional & Reporte Técnico *(Fase 1 y Final)*
+* **Russel** — Data Architecture, Docker & PostGIS ETL Pipeline *(Phase 1 & 2)*
+* **Rivaldo** — Backend FastAPI & Spatial Autocorrelation (PySAL / Moran's I) *(Phase 2 & 3)*
+* **Damián** — Frontend, MapLibre GL JS & Vercel Deployment *(Phase 3)*
+* **Bianca** — Data Analytics, KPI Formulation & ApexCharts *(Phase 1 & 3)*
+* **Jonathan** — Data Profiling, Dimensional Modeling & Technical Report *(Phase 1 & Final)*
 
-👉 Para más detalles sobre el flujo de trabajo y asignaciones, consulta [`DISTRIBUCION_EQUIPO.md`](./DISTRIBUCION_EQUIPO.md) y [`BUENAS_PRACTICAS.md`](./BUENAS_PRACTICAS.md).
+👉 For complete role details and workflow standards, see [`TEAM_DISTRIBUTION.md`](./TEAM_DISTRIBUTION.md) and [`BEST_PRACTICES.md`](./BEST_PRACTICES.md).

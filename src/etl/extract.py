@@ -2,10 +2,10 @@
 Bronze Layer (Raw Ingestion):
 Reads raw source datasets without modifying original files.
 Sources:
-- INEGI Censo de Población y Vivienda 2020 (Demografía)
-- INEGI DENUE (Directorio Estadístico Nacional de Unidades Económicas)
-- INEGI Cartografía Geoestadística (Polígonos AGEB Mérida)
-- Incidencias Delictivas (Georreferenciadas con Lat/Long)
+- INEGI Population and Housing Census 2020 (Demographics)
+- INEGI DENUE (National Directory of Economic Units)
+- INEGI Geo-statistical Cartography (Mérida AGEB Polygons)
+- Georeferenced Public Safety & Crime Incidents (Latitude/Longitude)
 """
 
 import os
@@ -32,13 +32,13 @@ def list_raw_files() -> Dict[str, list]:
     for p in DATA_RAW_DIR.rglob("*"):
         if p.is_file() and not p.name.startswith("."):
             lower_name = p.name.lower()
-            if any(k in lower_name for k in ["censo", "demografia", "pob", "iter"]):
+            if any(k in lower_name for k in ["censo", "census", "demografia", "demographics", "pob", "iter"]):
                 files_by_category["demographic"].append(p)
-            elif any(k in lower_name for k in ["denue", "negocio", "econom"]):
+            elif any(k in lower_name for k in ["denue", "negocio", "business", "econom"]):
                 files_by_category["economic"].append(p)
-            elif any(k in lower_name for k in ["ageb", "cartografia", "shape", ".shp", ".geojson"]):
+            elif any(k in lower_name for k in ["ageb", "cartografia", "cartography", "shape", ".shp", ".geojson"]):
                 files_by_category["cartography"].append(p)
-            elif any(k in lower_name for k in ["crimen", "delito", "seguridad", "incidencia"]):
+            elif any(k in lower_name for k in ["crimen", "crime", "delito", "seguridad", "safety", "incidencia"]):
                 files_by_category["crime"].append(p)
             else:
                 files_by_category["other"].append(p)

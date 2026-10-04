@@ -1,4 +1,4 @@
-# SQL DDL & DML scripts for Supabase / PostGIS Dimensional Data Warehouse
-# 01_schema.sql (Extensions, Dimensions, Facts, Spatial Indexes)
-# 02_load.sql (ETL population verification & constraints)
+# SQL DDL and DML scripts for Supabase / PostGIS Dimensional Data Warehouse
+# 01_schema.sql (Extensions, Dimensions, Facts, Spatial GIST Indexes)
+# 02_load.sql (Loading validation and constraints)
 # 03_views.sql (Analytical views for required KPIs)

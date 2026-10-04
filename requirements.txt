@@ -1,0 +1,48 @@
+# ==========================================================
+# Mérida Urban Intelligence - Python Dependencies
+# ==========================================================
+
+# --- Geospatial Processing & Spatial ETL ---
+geopandas>=1.0.1
+shapely>=2.0.6
+pyproj>=3.6.1
+fiona>=1.9.6
+rtree>=1.3.0
+
+# --- Spatial Statistics & Autocorrelation (Moran's I) ---
+pysal>=24.7
+libpysal>=4.12.1
+esda>=2.6.0
+splot>=1.1.7
+
+# --- Data Manipulation & Profiling ---
+pandas>=2.2.2
+numpy>=1.26.4
+scipy>=1.14.0
+scikit-learn>=1.5.1
+
+# --- Backend API (FastAPI) ---
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.6
+pydantic>=2.8.2
+pydantic-settings>=2.4.0
+python-dotenv>=1.0.1
+httpx>=0.27.0
+
+# --- Database & Supabase / PostGIS Connection ---
+supabase>=2.7.4
+psycopg2-binary>=2.9.9
+asyncpg>=0.29.0
+SQLAlchemy>=2.0.32
+geoalchemy2>=0.15.2
+
+# --- Visualization & Map Generation (Offline / Reports) ---
+matplotlib>=3.9.2
+seaborn>=0.13.2
+folium>=0.17.0
+
+# --- Development, Linting & Testing ---
+flake8>=7.1.1
+pytest>=8.3.2
+jupyter>=1.0.0
+ipykernel>=6.29.5

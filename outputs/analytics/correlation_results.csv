@@ -1,0 +1,4 @@
+id,x,y,x_label,y_label,expected_sign,n,spearman_rho,spearman_p,pearson_r_log,pearson_p,spearman_p_holm,significant,strength,direction
+H1,densidad_poblacion_km2,densidad_negocios_km2,Population density (res/km²),Business density (est/km²),+,494,0.47736113737594704,1.759135427659033e-29,0.5490735962412704,3.032571749784341e-40,3.518270855318066e-29,True,moderate,positive
+H2,tasa_pea_porcentaje,negocios_por_mil_hab,EAP rate (%),"Businesses per 1,000 residents",+,494,-0.3503847835043109,1.0258825712265345e-15,-0.30715145851567155,2.975201601053368e-12,1.0258825712265345e-15,True,moderate,negative
+H3,share_65_mas,densidad_servicios_km2,Population 65+ (%),Service density (est/km²),+,494,0.5703965514821944,5.632746448420347e-44,0.4254228095230469,3.9163143578112757e-23,1.6898239345261042e-43,True,strong,positive

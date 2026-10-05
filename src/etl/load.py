@@ -205,3 +205,90 @@ def load_fact_negocios_batch(df_fact_negocios: pd.DataFrame, engine=None, batch_
 
     print(f"[OK] Loaded {total_loaded} real business establishments into fact_negocios.")
     return total_loaded
+
+
+def load_dim_tiempo(df_tiempo: pd.DataFrame, engine=None) -> int:
+    """Load temporal dimension records into dim_tiempo."""
+    if df_tiempo.empty:
+        return 0
+
+    if engine is None:
+        engine = get_db_engine()
+    if engine is None:
+        return 0
+
+    records_loaded = 0
+    with engine.begin() as conn:
+        for _, row in df_tiempo.iterrows():
+            t_id = int(row["tiempo_id"])
+            fecha = str(row["fecha"])
+            anio = int(row["anio"])
+            mes = int(row["mes"])
+            mes_nom = str(row["mes_nombre"])
+            dia = int(row["dia"])
+            dia_sem = str(row["dia_semana"])
+            es_fin = bool(row["es_fin_de_semana"])
+            trim = int(row["trimestre"])
+
+            stmt = text("""
+                INSERT INTO dim_tiempo (tiempo_id, fecha, anio, mes, mes_nombre, dia, dia_semana, es_fin_de_semana, trimestre)
+                VALUES (:t_id, :fecha, :anio, :mes, :mes_nom, :dia, :dia_sem, :es_fin, :trim)
+                ON CONFLICT (fecha) DO UPDATE SET
+                    anio = EXCLUDED.anio,
+                    mes = EXCLUDED.mes,
+                    mes_nombre = EXCLUDED.mes_nombre,
+                    dia = EXCLUDED.dia,
+                    dia_semana = EXCLUDED.dia_semana,
+                    es_fin_de_semana = EXCLUDED.es_fin_de_semana,
+                    trimestre = EXCLUDED.trimestre;
+            """)
+            conn.execute(stmt, {
+                "t_id": t_id, "fecha": fecha, "anio": anio, "mes": mes,
+                "mes_nom": mes_nom, "dia": dia, "dia_sem": dia_sem,
+                "es_fin": es_fin, "trim": trim
+            })
+            records_loaded += 1
+
+    print(f"[OK] Loaded {records_loaded} temporal entries into dim_tiempo.")
+    return records_loaded
+
+
+def load_fact_crimen_batch(df_fact_crimen: pd.DataFrame, engine=None, batch_size=5000) -> int:
+    """Load public safety incidents into fact_crimen in batches."""
+    if df_fact_crimen.empty:
+        return 0
+
+    if engine is None:
+        engine = get_db_engine()
+    if engine is None:
+        return 0
+
+    total_loaded = 0
+    total_records = len(df_fact_crimen)
+
+    with engine.begin() as conn:
+        for i in range(0, total_records, batch_size):
+            batch = df_fact_crimen.iloc[i : i + batch_size]
+            for _, row in batch.iterrows():
+                cvegeo = str(row.get("cvegeo", ""))
+                t_id = int(row.get("tiempo_id", 1))
+                cat = str(row.get("categoria_delito", "Otro"))[:100]
+                tipo = str(row.get("tipo_delito", cat))[:150]
+                per = str(row.get("periodo_dia", "Afternoon"))[:50]
+                lon = float(row.get("longitud", 0.0))
+                lat = float(row.get("latitud", 0.0))
+
+                stmt = text("""
+                    INSERT INTO fact_crimen (cvegeo, tiempo_id, categoria_delito, tipo_delito, periodo_dia, geom_punto)
+                    VALUES (:cvegeo, :tiempo_id, :categoria, :tipo, :periodo, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326));
+                """)
+                conn.execute(stmt, {
+                    "cvegeo": cvegeo, "tiempo_id": t_id, "categoria": cat,
+                    "tipo": tipo, "periodo": per, "lon": lon, "lat": lat
+                })
+                total_loaded += 1
+
+            print(f"   Progress: {total_loaded}/{total_records} crime incidents loaded...")
+
+    print(f"[OK] Loaded {total_loaded} public safety incidents into fact_crimen.")
+    return total_loaded

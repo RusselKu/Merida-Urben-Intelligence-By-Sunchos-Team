@@ -87,9 +87,17 @@ def download_and_extract():
             print(f"\n[ERROR] Failed downloading {name}: {e}")
 
     print("\n==========================================================")
-    print("[COMPLETED] Official raw datasets downloaded & extracted.")
+    print("[COMPLETED] INEGI raw datasets downloaded & extracted.")
     print("==========================================================")
+
+    # SESNSP Official Crime Data
+    try:
+        from src.etl.download_official_crime import download_crime_data
+        download_crime_data()
+    except Exception as e:
+        print(f"[WARN] Crime data download encountered an issue: {e}")
 
 
 if __name__ == "__main__":
     download_and_extract()
+

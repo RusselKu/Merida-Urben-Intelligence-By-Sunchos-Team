@@ -1,17 +1,19 @@
-# Modelo dimensional implementado
+# Implemented dimensional model
 
-Responsable: Jonathan. Revisión: 2026-10-04. Fuente: [01_schema.sql](../sql/01_schema.sql).
+Owner: Jonathan. Reviewed: 2026-10-04. Source: [01_schema.sql](../sql/01_schema.sql).
 
-El modelo reúne tres dimensiones y tres tablas de hechos. El vínculo territorial común es la AGEB urbana. El siguiente diagrama muestra claves reales del DDL; los campos descriptivos completos están en el [diccionario](data_dictionary.md).
+The model contains three dimensions and three fact tables sharing the urban AGEB territorial key. The diagram shows actual DDL keys; the [dictionary](data_dictionary.md) covers all descriptive fields. A [PNG export](warehouse_model.png) is available for the PDF report.
+
+![Implemented warehouse ERD](warehouse_model.png)
 
 ```mermaid
 erDiagram
-    dim_geografia ||--o| fact_demografia : "cvegeo unico"
+    dim_geografia ||--o| fact_demografia : "unique cvegeo"
     dim_geografia ||--o{ fact_negocios : cvegeo
     dim_geografia ||--o{ fact_crimen : cvegeo
     dim_actividad_economica ||--o{ fact_negocios : scian_id
-    dim_tiempo o|--o{ fact_negocios : "tiempo_id nullable"
-    dim_tiempo o|--o{ fact_crimen : "tiempo_id nullable"
+    dim_tiempo o|--o{ fact_negocios : "nullable tiempo_id"
+    dim_tiempo o|--o{ fact_crimen : "nullable tiempo_id"
 
     dim_geografia {
         varchar cvegeo PK
@@ -65,25 +67,35 @@ erDiagram
     }
 ```
 
-| Tabla | Grano y cardinalidad efectiva |
+| Table | Grain and effective cardinality |
 | --- | --- |
-| `dim_geografia` | Una AGEB; puede existir sin hechos asociados |
-| `dim_tiempo` | Una fecha; una observación puede no tener fecha, porque su FK permite NULL |
-| `dim_actividad_economica` | Una clase SCIAN según el código de DENUE |
-| `fact_demografia` | Cero o una fila por AGEB, por UQ en `cvegeo`; sin dimensión temporal censal |
-| `fact_negocios` | Una fila insertada por establecimiento; muchas por AGEB/actividad; identidad de fuente y corte aún no preservados |
-| `fact_crimen` | Una fila prevista por incidente; muchas por AGEB; fuente y carga aún pendientes |
+| `dim_geografia` | One AGEB; may exist without associated facts |
+| `dim_tiempo` | One date; a fact may have no date because its FK is nullable |
+| `dim_actividad_economica` | One SCIAN class according to the DENUE code |
+| `fact_demografia` | Zero or one row per AGEB, enforced by UQ on `cvegeo`; no census time dimension |
+| `fact_negocios` | One inserted row per establishment; many per AGEB/activity; source identity and snapshot are not yet preserved |
+| `fact_crimen` | One intended row per incident; many per AGEB; source and load pending |
 
-`v_kpis_territoriales` agrega negocios y delitos antes de unirlos con geografía y demografía. Esa separación evita multiplicar incidentes por establecimientos en una unión directa entre hechos. El grano final sigue siendo una AGEB; no hay filtros por fecha en esta vista.
+`v_kpis_territoriales` aggregates businesses and crime before joining geography and demographics, avoiding incident/establishment multiplication from direct fact-to-fact joins. Its final grain remains one AGEB, with no date filters.
 
-Las FK geográficas eliminan hechos en cascada cuando se borra su AGEB. Las demás FK no declaran eliminación en cascada. Hay cuatro índices GiST: dos en geografía y uno en cada tabla de puntos (negocios y delitos). Las seis tablas tienen RLS habilitado y políticas SELECT públicas; la vista consulta con permisos del invocador.
+Geography FKs cascade-delete facts when their AGEB is deleted. Other FKs do not declare cascading deletion. Four GiST indexes exist: two on geography and one on each point fact. All six tables have RLS enabled with public SELECT policies; the view uses invoker permissions.
 
-## Decisiones pendientes antes de ampliar el modelo
+## Reproduce the PNG
 
-1. Acordar con Russel la identidad de establecimiento DENUE y el corte temporal para evitar recargas duplicadas.
-2. Definir con el equipo si demografía debe conservar varios censos; actualmente una recarga reemplaza el registro de la AGEB.
-3. Acordar la fuente de delitos, identificador de incidente, fecha y catálogo antes de poblar `fact_crimen` y `dim_tiempo`.
-4. Distinguir el nombre de clase SCIAN del nombre del sector de dos dígitos.
-5. Documentar cambios de límites/edición de AGEB entre fuentes antes de tratarlas como unidades equivalentes.
+The PNG is rendered from the Mermaid block above using Mermaid 11.12.0, white background and 2× raster resolution. Extract the block without Markdown fences to a temporary `.mmd` file, then render with Mermaid CLI:
 
-Estas son decisiones propuestas para revisión del equipo; esta entrega no modifica el DDL.
+```bash
+npx --yes @mermaid-js/mermaid-cli@11.12.0 -i warehouse_model.mmd -o docs/warehouse_model.png -b white -s 2
+```
+
+The browser renderer and its layout dependencies may vary the pixel dimensions; the source diagram and relationships remain authoritative. Regenerate the PNG when modifying this block.
+
+## Decisions before extending the model
+
+1. Agree with Russel on DENUE establishment identity and snapshot handling to prevent duplicate reloads.
+2. Decide whether demographics should retain multiple census editions; currently reloads replace each AGEB row.
+3. Agree on crime source, incident identifier, date and catalog before populating `fact_crimen` and `dim_tiempo`.
+4. Distinguish SCIAN class names from two-digit sector names.
+5. Document AGEB boundary/edition changes across sources before treating them as equivalent units.
+
+These are proposals for team review; this change does not modify the DDL.

@@ -1,46 +1,58 @@
-# Inventario inicial de fuentes
+# Source inventory and provenance
 
-Responsable: Jonathan. Corte documental: 2026-10-04.
+Owner: Jonathan. Documentation date: 2026-10-04.
 
-El inventario describe las fuentes que el código espera recibir. En este clon `data/raw/` solo contiene `.gitkeep`; no se han medido nulos, duplicados o cobertura de los CSV originales. Las direcciones de descarga están configuradas en [download_official_data.py](../src/etl/download_official_data.py); su disponibilidad y contenido no se verificaron en esta entrega.
+The inventory describes expected inputs and files actually inspected. The official INEGI census archive was downloaded for the demographic refresh. Raw files remain unchanged and ignored by Git. DENUE, cartography and crime source files remain unavailable in this clone. General download URLs are configured in [download_official_data.py](../src/etl/download_official_data.py); only the census resource was verified in this follow-up.
 
-| Fuente declarada | Archivo esperado por el extractor | Unidad original | Uso en el warehouse | Disponibilidad local |
+| Declared source | Expected extractor file | Original unit | Warehouse use | Local availability |
 | --- | --- | --- | --- | --- |
-| INEGI Censo de Población y Vivienda 2020, AGEB/manzana urbana de Yucatán | `*ageb_urbana_31_cpv2020.csv` | Registros con distintos niveles de agregación; se seleccionan totales AGEB | `fact_demografia` | CSV ausente; existe un GeoJSON derivado con problemas de calidad |
-| INEGI Marco Geoestadístico, declarado como 2020 por el pipeline | `31a.shp` y sus archivos complementarios | Polígono AGEB | `dim_geografia` | Shapefile ausente; comprobar edición y metadatos antes de usar |
-| INEGI DENUE, Yucatán | `denue_inegi_31_.csv` | Establecimiento georreferenciado | `dim_actividad_economica`, `fact_negocios` | CSV ausente; fecha de corte no documentada |
-| Incidentes de seguridad pública | `*crimen*.csv` o `*delito*.csv` | Incidente georreferenciado, previsto | `fact_crimen`, `dim_tiempo` | Fuente, proveedor, periodo y catálogo pendientes; sin carga en el pipeline |
-| Archivo derivado versionado | `outputs/maps/merida_agebs_demographics.geojson` | AGEB con propiedades demográficas | Fallback de la API | 526 features; auditoría reproducible disponible |
+| INEGI Population and Housing Census 2020, urban AGEB/block data for Yucatán | `conjunto_de_datos_ageb_urbana_31_cpv2020.csv` | Multiple aggregation levels; urban AGEB totals are selected | `fact_demografia` | Official CSV inspected: 40,140 rows; 526 selected Mérida urban AGEB totals |
+| INEGI Geostatistical Framework, declared as 2020 by the pipeline | `31a.shp` and companion files | AGEB polygon | `dim_geografia` | Shapefile absent; verify edition and metadata before use |
+| INEGI DENUE, Yucatán | `denue_inegi_31_.csv` | Georeferenced establishment | `dim_actividad_economica`, `fact_negocios` | CSV absent; snapshot date undocumented |
+| Public safety incidents | `*crimen*.csv` or `*delito*.csv` | Georeferenced incident, intended | `fact_crimen`, `dim_tiempo` | Source, provider, period and catalog pending; no pipeline load |
+| Versioned derived artifact | `outputs/maps/merida_agebs_demographics.geojson` | AGEB with demographic properties | Map and API fallback | 526 features; census age/inactivity values refreshed and audited |
 
-## Campos de origen utilizados
+## Verified census resource
 
-- Censo: `ENTIDAD`, `MUN`, `LOC`, `AGEB`, `NOM_LOC`, `MZA`, `POBTOT`, `POBMAS`, `POBFEM`, `POB0_14`, `POB15_64`, `POB65_MAS`, `PEA`, `PE_INAC`, `VIVTOT`. El lector usa UTF-8. El código actual comprueba expresamente la presencia de las tres variables de edad y `PE_INAC`.
-- Cartografía: `CVEGEO`, `CVE_ENT`, `CVE_MUN`, `CVE_LOC`, `CVE_AGEB`, geometría y CRS de origen. Los nombres se buscan sin distinguir mayúsculas. Revisar todos los componentes del shapefile, especialmente `.prj`, y registrar el CRS real antes de reproyectar.
-- DENUE: `cve_mun`, `codigo_act`, `nombre_act`, `nom_estab`, `per_ocu`, `latitud`, `longitud`. El lector usa Latin-1. El identificador de establecimiento de la fuente no se conserva en la tabla de hechos.
-- Delitos: aún no existe un mapeo implementado; no asumir nombres de columnas, fechas, CRS ni catálogo a partir del lector genérico.
+- Provider and observed period: INEGI, Census 2020. Download date: 2026-10-04. This is not the census observation period or publication date.
+- Resource: [official Yucatán urban AGEB/block CSV archive](https://www.inegi.org.mx/contenidos/programas/ccpv/2020/datosabiertos/ageb_manzana/ageb_mza_urbana_31_cpv2020_csv.zip), from the [Census 2020 program](https://www.inegi.org.mx/programas/ccpv/2020/).
+- Archive: `data/raw/census_2020/ageb_mza_urbana_31_cpv2020_csv.zip`; 6,044,441 bytes; SHA-256 `5cc69c7a9f0f248e1e19f960b4498a5459d4bedbc1bdc5dd7f98bfac44f99180`.
+- Dataset archive member: `ageb_mza_urbana_31_cpv2020/conjunto_de_datos/conjunto_de_datos_ageb_urbana_31_cpv2020.csv`.
+- Extracted dataset: `data/raw/census_2020/conjunto_de_datos_ageb_urbana_31_cpv2020.csv`; SHA-256 `a7215cad3366e3e6e0440649c95ea9cd751a5059fe55afa4bd9f2a29b5f39642`.
+- The archive also supplies a dictionary CSV and metadata TXT; neither is a census observation table. Census discovery now selects the exact dataset basename, avoiding the dictionary with the same suffix.
+- Selection: state `31`, municipality `050`, `NOM_LOC = 'Total AGEB urbana'`, `MZA = 0`. All 526 unique census CVEGEO keys match the GeoJSON exactly, with no unmatched keys.
+- Localities: `0001` = 483, `0075` = 10, `0077` = 8, `0084` = 13, `0093` = 8, `0111` = 4. Coverage includes urban areas across the municipality, not just locality `0001`.
+- Numeric totals and suppression tokens are retained in [demographic_refresh.json](../outputs/qa/demographic_refresh.json). Census totals are checked; original polygon edition, topology and area accuracy remain unverified.
 
-## Metadatos que deben registrarse al recibir cada fuente
+## Source fields used
 
-| Dato | Criterio de aceptación |
+- Census: `ENTIDAD`, `MUN`, `LOC`, `AGEB`, `NOM_LOC`, `MZA`, `POBTOT`, `POBMAS`, `POBFEM`, `POB0_14`, `POB15_64`, `POB65_MAS`, `PEA`, `PE_INAC`, `VIVTOT`. The reader uses UTF-8. The transform explicitly checks age/inactivity columns; the refresh checks all required columns.
+- Cartography: `CVEGEO`, `CVE_ENT`, `CVE_MUN`, `CVE_LOC`, `CVE_AGEB`, geometry and source CRS. Column lookup is case-insensitive. Inspect all shapefile components, especially `.prj`, and record the actual CRS before reprojection.
+- DENUE: `cve_mun`, `codigo_act`, `nombre_act`, `nom_estab`, `per_ocu`, `latitud`, `longitud`. The reader uses Latin-1. The source establishment identifier is not retained in the fact table.
+- Crime: no implemented mapping; do not infer column names, dates, CRS or catalog from the generic reader.
+
+## Metadata required for each source
+
+| Metadata | Acceptance criterion |
 | --- | --- |
-| Proveedor y URL efectiva | Identificar el recurso concreto descargado, su edición y sus condiciones de uso |
-| Fecha de publicación, corte y descarga | Registrar las tres cuando estén disponibles; no confundir fecha de descarga con periodo observado |
-| Archivo y SHA-256 | Permitir identificar exactamente la versión analizada |
-| Cobertura geográfica y temporal | Confirmar entidad, municipio, localidades y periodo; justificar diferencias entre fuentes |
-| Filas y claves | Contar antes y después de filtrar; medir nulos, unicidad y conflictos en las claves |
-| Coordenadas y geometrías | Comprobar CRS, rangos, validez, geometrías vacías y cobertura territorial |
-| Unión espacial | Contar asignados, fuera de polígonos, sobre bordes y con más de una correspondencia; reconciliar el total |
-| Supresión estadística | Contar `*`, `N/D` y valores faltantes antes de sustituirlos; documentar su efecto |
+| Provider and actual URL | Identify the resource, edition and usage conditions |
+| Publication, snapshot and download dates | Record available dates; distinguish download date from observation period |
+| File and SHA-256 | Identify the exact version analyzed |
+| Geographic and temporal coverage | Confirm state, municipality, localities and period; explain cross-source differences |
+| Rows and keys | Count before/after filtering; measure nulls, uniqueness and conflicting keys |
+| Coordinates and geometry | Check CRS, ranges, validity, empty geometries and territorial coverage |
+| Spatial join | Count assigned, outside, boundary and multiply matched points; reconcile totals |
+| Statistical suppression | Count `*`, `N/D` and missing values before substitution; document effects |
 
-DENUE utiliza una URL sin fecha explícita. Una nueva descarga puede pertenecer a otro corte; no describirla automáticamente como contemporánea al Censo 2020. El lector escoge el primer archivo coincidente, por lo que conviene conservar un manifiesto de la versión usada y evitar mezclar ediciones.
+The DENUE URL has no explicit date. A new download may represent another snapshot and must not automatically be described as contemporaneous with Census 2020. Preserve a manifest and avoid mixing editions; other source readers still select the first matching file.
 
-## Orden de validación
+## Validation sequence
 
-1. Registrar archivos originales y sus metadatos sin modificarlos.
-2. Perfilar claves y variables antes de limpiar; comprobar especialmente ceros y supresiones.
-3. Comparar CVEGEO de cartografía y censo: coincidencias y claves presentes en una sola fuente.
-4. Verificar la asignación de puntos a AGEB y los registros descartados.
-5. Ejecutar las [consultas SQL de calidad](../sql/04_quality_checks.sql) después de una carga controlada.
-6. Contrastar warehouse, respuesta API y dashboard antes de publicar cifras.
+1. Preserve raw files and record metadata.
+2. Profile keys and variables before cleaning, particularly zeros and suppression.
+3. Compare cartography, census and warehouse CVEGEO sets, including unmatched keys.
+4. Validate point-to-AGEB assignment and excluded records.
+5. Run the [SQL quality checks](../sql/04_quality_checks.sql) after a controlled load.
+6. Compare warehouse, API and dashboard before publishing indicators.
 
-La evidencia observada en el archivo local se detalla en [initial_data_audit.md](initial_data_audit.md). Hasta completar la validación de fuentes y la carga, los indicadores derivados siguen pendientes de aceptación.
+The reviewer reported 531 AGEBs in Supabase; this has not been independently queried here. The exact census/GeoJSON match does not explain that difference. Follow the [reconciliation procedure](initial_data_audit.md#warehouse-coverage-reconciliation-531-reported-vs-526-local) before describing live warehouse coverage as equivalent.

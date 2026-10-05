@@ -1,68 +1,119 @@
-# Auditoría inicial de datos y reproducción
+# Local data audit, remediation and acceptance evidence
 
-Responsable: Jonathan. Revisión local: 2026-10-04.
+Owner: Jonathan. Local review: 2026-10-04.
 
-## Alcance y evidencia
+## Scope and evidence
 
-Se revisó el código y el archivo GeoJSON versionado en la rama `feature/jonathan-data-dictionary`, basada en `develop`, commit `bee3f9cd621160b9b7d1c2e7b448109f7bb28485`. No se conectó a Supabase, no se descargaron fuentes y no se ejecutó el ETL. No se certifican las cifras de una base remota ni la cobertura completa de Mérida.
+The initial audit inspected branch `feature/jonathan-data-dictionary`, based on `develop` commit `bee3f9cd621160b9b7d1c2e7b448109f7bb28485`. It detected stale age-group and inactive-population properties in the committed GeoJSON. This follow-up downloaded the official INEGI census and refreshed the demographic properties of the existing 526 features. It did not query Supabase, reload the warehouse, regenerate polygon boundaries, or run the complete ETL.
 
-- Archivo: [merida_agebs_demographics.geojson](../outputs/maps/merida_agebs_demographics.geojson).
-- SHA-256: `21013fd890b423dead5153c94bdac6d5c10f5a378a76a610e67fbd6589d0b967`.
-- Evidencia calculada: [local_data_audit.json](../outputs/qa/local_data_audit.json).
-- Herramienta reproducible: [audit_local_data.py](../src/qa/audit_local_data.py), solo biblioteca estándar de Python.
+- Current artifact: [merida_agebs_demographics.geojson](../outputs/maps/merida_agebs_demographics.geojson), used by the map and API fallback.
+- Initial local SHA-256 (CRLF checkout): `21013fd890b423dead5153c94bdac6d5c10f5a378a76a610e67fbd6589d0b967`.
+- Original Git blob SHA-256 (LF): `5669b6b82bec7423c7a11574f3a45f1d96c1a3f5ae63cfaa4f6f8fbd2aa2bbff`.
+- Corrected SHA-256 (LF): `a6f66cbc6433c2a6d70dca9bf4b5bb3df0b36e5e5fa366d2897edd57ed7c1b8e`.
+- Current profile: [local_data_audit.json](../outputs/qa/local_data_audit.json).
+- Source mapping, before/after totals and suppression evidence: [demographic_refresh.json](../outputs/qa/demographic_refresh.json).
+- Source URL, hashes and selection: [data_sources.md](data_sources.md).
+- Reproducible tools: [audit_local_data.py](../src/qa/audit_local_data.py), [refresh_demographic_geojson.py](../src/qa/refresh_demographic_geojson.py) and [reconcile_geography.py](../src/qa/reconcile_geography.py), all using the Python standard library.
 
-Ejecutar desde la raíz del repo:
+File hashes describe the bytes inspected; Git line-ending conversion may change a checkout hash without changing GeoJSON values.
+
+## Observed local results
+
+| Control | Initial artifact | Corrected artifact / interpretation |
+| --- | --- | --- |
+| Features and CVEGEO keys | 526; no duplicates or unexpected format | Same 526 keys; exact match to selected census totals |
+| Total population | 957,399 | 957,399; unchanged |
+| Population aged 0–14 | 957,399 | 190,473 from `POB0_14` |
+| Population aged 15–64 | 0 | 670,763 from `POB15_64` |
+| Population aged 65+ | 0 | 93,599 from `POB65_MAS` |
+| Economically active population | 508,151 | 508,151; unchanged |
+| Economically inactive population | 0 | 294,340 from `PE_INAC` |
+| Dwellings | 359,495 | 359,495; unchanged |
+| Systematic age pattern in populated AGEBs | 520/520 | 0/520; local mapping error resolved |
+| Derived 100% PEA rate | 516 AGEBs | 1 AGEB; review the original small-population record |
+| Sex-total differences | 4 AGEBs, maximum absolute gap 24 | Same 4; original sex values are suppressed, so no fabricated correction |
+| Zero / below-100 population | 6 / 32, including zeros | Unchanged; zero denominators and unstable small-area rates need handling |
+| Numeric demographic fields | Nine numeric counts per feature, no negatives | Same; suppression remains zero-imputed under the current ETL policy |
+| Area | Min 0.0122, median 0.40565, max 6.5497 km²; sum 259.8632 km² | Preserved; no CRS/topology/area recalculation |
+| Geometry types | 526 Polygon | Preserved; valid GeoJSON type, with loader-specific MultiPolygon handling below |
+| Business/crime properties | Absent on all features | Still unavailable; absence does not mean zero observations |
+| Raw source availability | No source files in the initial clone | Official census present locally; other raw datasets still absent |
+
+Only the four stale fields changed: 520 age-0–14 values, 516 age-15–64 values, 497 age-65+ values and 515 inactivity values, across 520 features. Keys, geometry, areas, feature order and all other properties are preserved.
+
+The census source contains 40,140 rows. Filtering state `31`, municipality `050`, urban AGEB totals and `MZA = 0` gives 526 unique keys across six localities. There are no census-only or GeoJSON-only keys. This establishes the census join for the local artifact, not equivalent coverage of the remote warehouse.
+
+Suppression counts among the matched AGEBs: male = 4, female = 4, age 0–14 = 7, age 15–64 = 4, age 65+ = 14, PEA = 4, PNEA = 5; total population and dwellings have none. The manifest retains each original token and CVEGEO. Age-group sums differ from population by 2,564 people overall; suppression and unspecified age must be considered before treating this as another mapping error.
+
+## Reproduce the correction and audit
+
+Download the [official census ZIP](https://www.inegi.org.mx/contenidos/programas/ccpv/2020/datosabiertos/ageb_manzana/ageb_mza_urbana_31_cpv2020_csv.zip), verify the hash in the source inventory, and extract its dataset CSV into `data/raw/census_2020/`. Keep raw data unchanged.
+
+From the repository root:
 
 ```bash
-python -m src.qa.audit_local_data --output outputs/qa/local_data_audit.json
+# Validate the source and join without writing files:
+python -m src.qa.refresh_demographic_geojson --census data/raw/census_2020/conjunto_de_datos_ageb_urbana_31_cpv2020.csv --dry-run
+
+# Update demographic properties and write a provenance report:
+python -m src.qa.refresh_demographic_geojson --census data/raw/census_2020/conjunto_de_datos_ageb_urbana_31_cpv2020.csv
+
+# Profile the current artifact and fail on error findings:
+python -m src.qa.audit_local_data --output outputs/qa/local_data_audit.json --check
 ```
 
-El comando genera el perfil sin modificar el GeoJSON. Para usarlo como comprobación, añadir `--check`: devuelve código 1 si detecta hallazgos de error; con el archivo actual ese resultado es esperado. Un código 0 no acredita que las fuentes estén completas ni que las geometrías sean topológicamente correctas.
+The audit now exits 0 with two warning categories: one derived 100% PEA rate and sex-total gaps in four AGEBs. It does not certify complete sources, topology or remote data. The refresh rejects missing columns, duplicate keys, unmatched local keys and unexpected numeric tokens before writing. Use `--output` for a separate candidate artifact. Repeating the refresh on corrected input changes zero demographic values. A new run overwrites its report; preserve the committed before/after manifest if keeping historical evidence.
 
-La herramienta se comprobó contra el archivo versionado y ejemplos sintéticos con datos coherentes, claves inválidas, claves repetidas, conteos negativos y colección vacía. Se verificaron sus códigos de salida, la reproducción exacta del JSON y el rechazo de una salida que sobrescribiera el archivo de entrada. También se comprobó que el diccionario incluye las 50 columnas de las seis tablas del DDL y que los enlaces locales de los documentos nuevos resuelven.
+## Warehouse coverage reconciliation: 531 reported vs 526 local
 
-## Resultados observados en el archivo local
+The reviewer reported 531 AGEBs in Supabase versus 526 in the GeoJSON. The warehouse count is reported evidence, not an independent query from this workstation. The net difference is five; counts alone cannot establish that the local set is a subset or identify which codes differ. The official census contains exactly the 526 local keys, so the source join does not explain the remote difference.
 
-| Control | Resultado | Interpretación |
-| --- | --- | --- |
-| Features y claves | 526 features, sin CVEGEO repetidos o con formato inesperado | Pasa el control local de formato `31050` + localidad + AGEB; no prueba cobertura completa |
-| Campos demográficos | 526 filas con los nueve conteos numéricos; sin nulos ni negativos en ellos | Los ceros imputados pueden ocultar faltantes en las fuentes |
-| Población total | 957,399 | Suma de este archivo; pendiente de reconciliar con fuente y warehouse |
-| AGEB sin habitantes | 6 | Las tasas por población no tienen denominador válido |
-| AGEB con población menor de 100 | 32, incluidas las 6 con cero | Revisar estabilidad de tasas; la regla analítica de Bianca no se aplica automáticamente en la API actual |
-| Grupos de edad | 526/526 con población 0–14 igual al total; 15–64 y 65+ en cero | Patrón sistemático incorrecto; incluye 6 AGEB con total cero |
-| Patrón de edad en AGEB pobladas | 520/520 | Confirma que el problema no se explica por registros sin habitantes |
-| Población inactiva | Cero en las 526 AGEB | Revisar mapeo y regenerar archivo desde la fuente |
-| Tasa PEA derivada | Sería 100% en 516 AGEB con PEA positiva | Resultado aritmético del archivo desactualizado; no es un hallazgo socioeconómico |
-| Suma por sexo frente al total | Diferencia en 4 AGEB; máximo absoluto de 24 personas | Cotejar supresión estadística y datos originales antes de corregir |
-| Superficie | Mínimo 0.0122, mediana 0.40565, máximo 6.5497 km²; suma 259.8632 km² | Valores positivos; no se recalculó el área ni se comprobó el CRS |
-| Geometrías declaradas | 526 Polygon | El DDL exige MultiPolygon; el archivo no demuestra validez topológica |
-| Negocios y delitos | Propiedades `total_negocios` y `total_delitos` ausentes en las 526 features | Datos no disponibles en el archivo; no equivalen a cero observaciones |
-| Fuentes originales | Sin archivos coincidentes en `data/raw/` para las cuatro fuentes | Perfilado de fuentes y reconciliación pendientes |
+Export these read-only results from the live warehouse with access to all rows, recording export date, source edition, project and role/RLS visibility:
 
-## Hallazgos y responsables propuestos
+```sql
+SELECT cvegeo FROM dim_geografia ORDER BY cvegeo;
 
-Las asignaciones siguientes siguen `TEAM_DISTRIBUTION.md`; son una guía de coordinación, no notificaciones enviadas al equipo. Jonathan registra evidencia y verifica el cierre con cada responsable.
+SELECT g.cve_ent, g.cve_mun, g.cve_loc, COUNT(*) AS geography_rows,
+       COUNT(d.cvegeo) AS rows_with_demographics
+FROM dim_geografia g
+LEFT JOIN fact_demografia d USING (cvegeo)
+GROUP BY g.cve_ent, g.cve_mun, g.cve_loc
+ORDER BY g.cve_ent, g.cve_mun, g.cve_loc;
+```
 
-| ID | Prioridad | Evidencia / problema | Acción y responsable propuesto | Criterio para cerrar |
+Save the first result as a CSV with a `cvegeo` header, then compare exact key sets:
+
+```bash
+python -m src.qa.reconcile_geography --warehouse-csv data/raw/warehouse_geography.csv --output outputs/qa/geography_reconciliation.json
+```
+
+The tool records both input hashes, counts, matched keys, keys exclusive to either side and locality counts. Review each unmatched key against polygon edition, census coverage and demographic availability; do not delete or fabricate AGEBs to force equal counts. Include the accepted reconciliation results in the PDF report. Until the export is available, this item remains open.
+
+## Findings and proposed owners
+
+Assignments follow `TEAM_DISTRIBUTION.md` and are coordination guidance; no team messages were sent. Jonathan records evidence and verifies acceptance with each owner.
+
+| ID | Priority | Current evidence / issue | Action and proposed owner | Closure criterion |
 | --- | --- | --- | --- | --- |
-| QA-01 | Alta | El GeoJSON mantiene el patrón incorrecto de edad y PNEA | Russel, con Bianca: regenerar desde el censo usando el mapeo actual | Cotejo de variables originales, nuevo hash, perfil sin patrón sistemático y reconciliación con warehouse |
-| QA-02 | Alta | El código actual ya usa `POB0_14`, `POB15_64`, `POB65_MAS`, `PE_INAC`, pero cambiar el código no actualiza archivos exportados | Russel: incluir regeneración verificable y registrar fecha/corte de carga | Archivo, tablas y API reflejan la misma versión validada |
-| QA-03 | Alta | `load_dim_geografia()` y SQL exportado insertan Polygon sin conversión; DDL exige MultiPolygon | Russel: acordar conversión y completar carga | Una carga de prueba acepta los polígonos; Q07 no devuelve excepciones |
-| QA-04 | Alta | `fact_negocios` no conserva ID DENUE ni restricción para distinguir recargas | Russel: definir identidad/corte e implementar carga repetible | Dos cargas del mismo corte no aumentan el conteo ni alteran KPIs |
-| QA-05 | Media | Fallback de API asigna ceros a negocios/delitos ausentes y a ciertas tasas indefinidas | Rivaldo: identificar procedencia y disponibilidad de indicadores | Respuestas distinguen dato ausente, tasa indefinida y cero observado |
-| QA-06 | Media | Dashboard tiene población fija 887,632 frente a suma local 957,399 y no consulta la API | Damián, con Bianca: conectar métricas y documentar cobertura | Tarjetas coinciden con el warehouse validado y explican fuente/corte |
-| QA-07 | Alta para análisis de delitos | No hay fuente local ni transformación/carga de delitos en el pipeline | Equipo acuerda fuente; Russel implementa carga; Rivaldo/Bianca integran análisis | Catálogo, periodo, coordenadas e identidad documentados; carga y métricas reconciliadas |
-| QA-08 | Media | Notebook inicial importaba `list_raw_files` y `spatial_join_points_to_polygons`, ausentes del ETL actual | Jonathan: actualizado a `get_real_paths`, auditoría local y `gpd.sjoin` en esta entrega; sintaxis e imports internos comprobados | Pendiente ejecutar todas las celdas con GeoPandas; el ejemplo espacial es sintético y no valida cobertura de fuentes |
-| QA-09 | Media | CI instala pytest pero no ejecuta pruebas; control SQL solo enumera archivos | Russel/Rivaldo: incorporar pruebas y validación SQL efectiva | Fallos de prueba o SQL impiden pasar el workflow |
-| QA-10 | Media | `sector_nombre` es nombre de clase; la vista lo presenta como actividad dominante | Russel/Bianca: acordar nivel SCIAN y nombres | Diccionario, agrupación SQL y visualización usan el mismo nivel |
+| QA-01 | High | Local age/PNEA properties refreshed from the official census; warehouse agreement remains unverified | Jonathan: completed local repair; Russel/Bianca: compare warehouse and consumers | Source mapping/hash recorded, local error pattern absent, accepted warehouse/API/map agreement |
+| QA-02 | High | Transform uses correct census fields; generated artifacts required regeneration | Local refresh completed; Russel: record warehouse source snapshot and load date | Files, warehouse and API use the same accepted version |
+| QA-03 | High for unverified load paths | REST `load_full_warehouse.py` already converts Polygon to MultiPolygon; `src/etl/load.py` and exported SQL do not explicitly convert | Russel: document the active load path and validate alternatives; Jonathan: reconcile coverage | Active path accepts geometry, Q07 has no exceptions, 531/526 key difference explained |
+| QA-04 | High | `fact_negocios` lacks DENUE identity and repeated-load safeguards | Russel: define source identity/snapshot and repeatable loads | Repeating a snapshot does not increase counts or alter KPIs |
+| QA-05 | Medium | API fallback substitutes zeros for unavailable business/crime fields and some undefined rates | Rivaldo: expose indicator provenance/availability | Responses distinguish absent data, undefined rates and observed zero |
+| QA-06 | Medium | Dashboard population is fixed at 887,632 versus local total 957,399; metrics are not API-driven | Damián/Bianca: connect metrics and explain coverage | Cards match accepted warehouse results and document source/snapshot |
+| QA-07 | High for crime analysis | No local crime source or transformation/load exists in the pipeline | Team: agree on source; Russel: load; Rivaldo/Bianca: integrate analysis | Catalog, period, coordinates and identity documented; counts reconciled |
+| QA-08 | Medium | Notebook imports were updated to `get_real_paths`, local audit and `gpd.sjoin` | Jonathan: syntax/internal imports checked; full GeoPandas execution pending | All cells execute with dependencies; synthetic join is not source-coverage validation |
+| QA-09 | Medium | CI now runs the five QA regression tests and the artifact audit; pytest/backend coverage and real SQL execution remain pending | Russel/Rivaldo: extend test coverage and execute SQL | QA regressions fail CI; backend/SQL failures must also block workflow success |
+| QA-10 | Medium | `sector_nombre` holds a class name and the view uses it as dominant activity | Russel/Bianca: agree on SCIAN level and labels | Dictionary, grouping and visualization use the same level |
 
-El comando de arranque del README se corrige en esta entrega a `python src/backend/run.py`. El servicio Docker aún apunta a `src.backend.main:app`, módulo inexistente; la corrección y prueba de Docker quedan con Russel/Rivaldo.
+The README now uses `python src/backend/run.py`. Docker still points at the nonexistent `src.backend.main:app`; correction/testing remain with Russel/Rivaldo.
 
-## Validación pendiente en PostgreSQL/PostGIS
+## PostgreSQL/PostGIS validation status
 
-[04_quality_checks.sql](../sql/04_quality_checks.sql) contiene controles de cobertura, CVEGEO, integridad referencial, demografía, geometrías, ubicación de puntos, candidatos a duplicado, calendario, SCIAN y reconciliación de la vista. Se ejecuta en transacción de solo lectura con una instantánea consistente; requiere el esquema, la vista y acceso a todas las filas. RLS puede afectar lo observado.
+[04_quality_checks.sql](../sql/04_quality_checks.sql) has 17 SELECT queries grouped Q01–Q12 for coverage, CVEGEO, FKs, demographics, geometry, point location, duplicate candidates, calendar, SCIAN, view reconciliation and rate denominators. It uses a read-only repeatable-read transaction. RLS may restrict observed rows.
 
-Registrar fecha de carga, versión de fuentes, usuario/permisos y resultados de Q01–Q12. Se espera cero huérfanos, claves mal formadas, conteos negativos, geometrías inválidas y tasas incompatibles con sus denominadores. Los candidatos a duplicado y diferencias demográficas requieren revisión, no eliminación automática. Tablas vacías y fechas nulas deben registrarse como pendientes de cobertura.
+The reviewer reported that all 17 queries execute without errors on PostgreSQL 16 + PostGIS 3 against the project schema. This is a schema/syntax smoke check, **not execution against live Supabase data**. The initial age/PNEA findings were also reproduced by the reviewer before the local repair. These are reviewer-reported results; this workstation has not executed PostgreSQL/PostGIS checks.
 
-El SQL se revisó contra los nombres del DDL, pero **no se ejecutó ni se validó con un motor PostgreSQL/PostGIS** en esta entrega. Las pruebas de FastAPI y el build del frontend también quedan pendientes por falta de dependencias. El informe técnico final debe usar resultados aceptados después de estos controles.
+After loading, retain Q01–Q12 outputs, source versions, load date and query permissions. Expected exception counts are zero for orphan keys, malformed codes, negative counts, invalid geometry and rates incompatible with denominators. Duplicate candidates and demographic differences require source review, not automatic deletion. Empty tables and null dates are coverage limitations.
+
+Local checks cover the source join, artifact preservation, repeatability, validation failures, current audit, source-discovery behavior, dictionary completeness and documentation links. Five standard-library regression tests pass with `python -m unittest discover -s tests -v`; CI now runs them and the committed-artifact audit. FastAPI tests, the complete GeoPandas notebook and frontend build remain unexecuted here because project dependencies are unavailable. The final PDF should clearly distinguish local verification, reviewer schema checks and pending live warehouse results.

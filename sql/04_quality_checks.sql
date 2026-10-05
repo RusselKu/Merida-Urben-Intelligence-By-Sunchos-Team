@@ -1,11 +1,11 @@
--- Jonathan: QA del warehouse. Solo lectura; requiere 01_schema.sql y 03_views.sql.
--- Ejecutar con acceso a todas las filas. RLS puede ocultar datos y alterar conteos.
--- Guardar los resultados junto con la fecha de carga y el usuario utilizado.
--- Una consulta sin filas significa que ese control no detecto excepciones;
--- no certifica fuentes completas. Nunca corregir o borrar datos automaticamente.
+-- Jonathan: read-only warehouse QA; requires 01_schema.sql and 03_views.sql.
+-- Execute with visibility of all rows. RLS can hide data and affect counts.
+-- Preserve results together with load date and query user.
+-- An empty result means this check found no exceptions;
+-- it does not certify source completeness. Never repair/delete data automatically.
 BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY;
 
--- Q01. Cobertura: tablas vacias son fuentes pendientes, no ausencia observada.
+-- Q01. Coverage: empty tables mean pending sources, not observed absence.
 SELECT 'dim_geografia' AS tabla, COUNT(*) AS filas FROM dim_geografia
 UNION ALL SELECT 'dim_tiempo', COUNT(*) FROM dim_tiempo
 UNION ALL SELECT 'dim_actividad_economica', COUNT(*) FROM dim_actividad_economica
@@ -13,14 +13,14 @@ UNION ALL SELECT 'fact_demografia', COUNT(*) FROM fact_demografia
 UNION ALL SELECT 'fact_negocios', COUNT(*) FROM fact_negocios
 UNION ALL SELECT 'fact_crimen', COUNT(*) FROM fact_crimen;
 
--- Q02. Formato y composicion de CVEGEO. Los componentes AGEB pueden incluir letras.
+-- Q02. CVEGEO format and composition. AGEB components may contain letters.
 SELECT cvegeo, cve_ent, cve_mun, cve_loc, cve_ageb
 FROM dim_geografia
 WHERE cvegeo !~ '^31050[0-9]{4}[0-9A-Z]{4}$'
    OR cve_ent <> '31' OR cve_mun <> '050'
    OR cvegeo <> cve_ent || cve_mun || cve_loc || cve_ageb;
 
--- Q03. Cobertura geografica del censo en ambas direcciones.
+-- Q03. Census/geography coverage in both directions.
 SELECT 'geografia_sin_demografia' AS control, g.cvegeo
 FROM dim_geografia g LEFT JOIN fact_demografia d USING (cvegeo)
 WHERE d.cvegeo IS NULL
@@ -29,7 +29,7 @@ SELECT 'demografia_sin_geografia', d.cvegeo
 FROM fact_demografia d LEFT JOIN dim_geografia g USING (cvegeo)
 WHERE g.cvegeo IS NULL;
 
--- Q04. Integridad referencial de todas las FK. Se espera cero por control.
+-- Q04. Referential integrity for all FKs. Expected count: zero per check.
 SELECT 'negocio_geografia' AS control, COUNT(*) AS huerfanos
 FROM fact_negocios f LEFT JOIN dim_geografia g ON g.cvegeo = f.cvegeo
 WHERE g.cvegeo IS NULL
@@ -50,7 +50,7 @@ SELECT 'crimen_tiempo', COUNT(*)
 FROM fact_crimen f LEFT JOIN dim_tiempo t ON t.tiempo_id = f.tiempo_id
 WHERE f.tiempo_id IS NOT NULL AND t.tiempo_id IS NULL;
 
--- Q05. Grano demografico y conteos negativos. Las FK/UQ no controlan signos.
+-- Q05. Demographic grain and negative counts. FK/UQ constraints do not check signs.
 SELECT cvegeo, COUNT(*) AS filas FROM fact_demografia
 GROUP BY cvegeo HAVING COUNT(*) > 1;
 
@@ -61,8 +61,8 @@ WHERE LEAST(poblacion_total, poblacion_masculina, poblacion_femenina,
             poblacion_0_14, poblacion_15_64, poblacion_65_mas,
             poblacion_pea, poblacion_pnea, total_viviendas) < 0;
 
--- Q06. Coherencia demografica: revisar diferencias y supresiones con la fuente.
--- Las diferencias no autorizan reemplazar datos; puede haber edad no especificada.
+-- Q06. Demographic coherence: compare differences and suppression with the source.
+-- Differences do not authorize replacement; unspecified age may be present.
 SELECT cvegeo, poblacion_total,
        poblacion_total::BIGINT - poblacion_masculina - poblacion_femenina AS diferencia_sexo,
        poblacion_total::BIGINT - poblacion_0_14 - poblacion_15_64 - poblacion_65_mas AS diferencia_edad,
@@ -72,7 +72,7 @@ WHERE poblacion_total::BIGINT <> poblacion_masculina::BIGINT + poblacion_femenin
    OR poblacion_total::BIGINT <> poblacion_0_14::BIGINT + poblacion_15_64 + poblacion_65_mas
    OR poblacion_pea::BIGINT + poblacion_pnea > poblacion_total;
 
--- Patron del archivo local desactualizado; debe revisarse tras regenerar/cargar.
+-- Regression check for the stale artifact pattern; inspect after refresh/load.
 SELECT COUNT(*) AS filas, SUM(poblacion_total::BIGINT) AS poblacion_total,
        COUNT(*) FILTER (WHERE poblacion_total > 0 AND poblacion_0_14 = poblacion_total
                          AND poblacion_15_64 = 0 AND poblacion_65_mas = 0) AS patron_edad_sospechoso,
@@ -81,8 +81,8 @@ SELECT COUNT(*) AS filas, SUM(poblacion_total::BIGINT) AS poblacion_total,
        COUNT(*) FILTER (WHERE poblacion_total < 100) AS poblacion_menor_100_incluye_ceros
 FROM fact_demografia;
 
--- Q07. Superficies y geometria obligatorias para analisis; geom_6372 es opcional
--- en el DDL y el cargador actual no la llena. Reportar ese faltante por separado.
+-- Q07. Areas and geometry required for analysis; geom_6372 is optional
+-- in the DDL and the direct loader does not populate it. Report separately.
 SELECT cvegeo, area_km2, ST_SRID(geom_4326) AS srid,
        ST_GeometryType(geom_4326) AS tipo, ST_IsValidReason(geom_4326) AS validez
 FROM dim_geografia
@@ -96,7 +96,7 @@ SELECT COUNT(*) FILTER (WHERE geom_6372 IS NULL) AS sin_geometria_metrica,
             OR ST_IsEmpty(geom_6372))) AS geometria_metrica_incorrecta
 FROM dim_geografia;
 
--- Comparar el area guardada con el calculo proyectado; tolerancia de redondeo.
+-- Compare stored area with projected calculation, allowing rounding tolerance.
 WITH areas AS (
     SELECT cvegeo, area_km2,
            CASE WHEN geom_4326 IS NOT NULL AND ST_IsValid(geom_4326)
@@ -108,8 +108,8 @@ WITH areas AS (
 SELECT * FROM areas
 WHERE ABS(area_km2 - area_calculada_km2) > 0.0001;
 
--- Q08. Ubicacion de puntos y pertenencia a su AGEB. Revisar tambien puntos nulos.
--- CASE evita predicados sobre geometria invalida; ST_Covers admite el borde.
+-- Q08. Point location and AGEB membership. Also inspect null points.
+-- CASE avoids predicates on invalid geometry; ST_Covers includes boundaries.
 WITH puntos AS (
     SELECT 'negocio' AS fuente, fact_negocio_id AS id, cvegeo, geom_punto FROM fact_negocios
     UNION ALL
@@ -131,8 +131,8 @@ WITH puntos AS (
 SELECT fuente, problema, COUNT(*) AS filas FROM revisiones
 WHERE problema IS NOT NULL GROUP BY fuente, problema ORDER BY fuente, problema;
 
--- Q09. Candidatos a duplicado. Nombre/actividad/punto iguales NO son un ID DENUE.
--- Revisar contra la fuente antes de concluir duplicacion; no eliminar por esta consulta.
+-- Q09. Duplicate candidates. Identical name/activity/point is NOT a DENUE ID.
+-- Check the source before concluding duplication; do not delete based on this query.
 SELECT cvegeo, scian_id, nombre_establecimiento, estrato_personal,
        ENCODE(ST_AsEWKB(geom_punto), 'hex') AS punto_ewkb, COUNT(*) AS coincidencias
 FROM fact_negocios
@@ -141,7 +141,7 @@ GROUP BY cvegeo, scian_id, nombre_establecimiento, estrato_personal,
 HAVING COUNT(*) > 1
 ORDER BY coincidencias DESC LIMIT 100;
 
--- Q10. Calendario y SCIAN: coherencia interna, no validacion del catalogo oficial.
+-- Q10. Calendar and SCIAN: internal consistency, not official catalog validation.
 SELECT tiempo_id, fecha FROM dim_tiempo
 WHERE anio <> EXTRACT(YEAR FROM fecha)::INT
    OR mes <> EXTRACT(MONTH FROM fecha)::INT
@@ -154,8 +154,8 @@ FROM dim_actividad_economica
 WHERE scian_id <> codigo_actividad OR sector_codigo <> LEFT(codigo_actividad, 2)
    OR categoria_macro NOT IN ('Comercio', 'Servicios', 'Industria', 'Otro');
 
--- Q11. Grano y reconciliacion de conteos de la vista con las tablas de origen.
--- Comparar bajo los mismos permisos y en esta misma transaccion.
+-- Q11. View grain and count reconciliation with source tables.
+-- Compare under the same permissions and within this transaction.
 SELECT (SELECT COUNT(*) FROM dim_geografia) AS agebs_dimension,
        COUNT(*) AS filas_vista, COUNT(DISTINCT cvegeo) AS claves_vista,
        COALESCE(SUM(poblacion_total::BIGINT), 0) AS poblacion_vista,
@@ -166,7 +166,7 @@ SELECT (SELECT COUNT(*) FROM dim_geografia) AS agebs_dimension,
        (SELECT COUNT(*) FROM fact_crimen) AS delitos_tabla
 FROM v_kpis_territoriales;
 
--- Q12. Tasas y denominadores. Un NULL con base cero es esperado en SQL.
+-- Q12. Rates and denominators. NULL is expected for a zero denominator in SQL.
 SELECT v.cvegeo, v.tasa_pea_porcentaje, v.negocios_por_mil_hab,
        v.tasa_delictiva_por_mil_hab, v.ratio_delito_por_negocio
 FROM v_kpis_territoriales v
@@ -179,4 +179,4 @@ WHERE v.tasa_pea_porcentaje NOT BETWEEN 0 AND 100
    OR (v.total_negocios = 0 AND v.ratio_delito_por_negocio IS NOT NULL);
 
 COMMIT;
--- Si una consulta falla y deja la transaccion abortada, ejecutar ROLLBACK.
+-- If a query fails and aborts the transaction, execute ROLLBACK.

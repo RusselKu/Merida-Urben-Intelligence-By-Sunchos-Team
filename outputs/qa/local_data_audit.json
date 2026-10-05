@@ -1,12 +1,14 @@
 {
   "input_file": "merida_agebs_demographics.geojson",
-  "sha256": "21013fd890b423dead5153c94bdac6d5c10f5a378a76a610e67fbd6589d0b967",
+  "sha256": "a6f66cbc6433c2a6d70dca9bf4b5bb3df0b36e5e5fa366d2897edd57ed7c1b8e",
   "features": 526,
   "geometry_types": {
     "Polygon": 526
   },
   "raw_inventory": {
-    "census": [],
+    "census": [
+      "data/raw/census_2020/conjunto_de_datos_ageb_urbana_31_cpv2020.csv"
+    ],
     "denue": [],
     "cartography": [],
     "crime": []
@@ -57,33 +59,33 @@
       "missing": 0,
       "null": 0,
       "numeric_count": 526,
-      "sum": 957399,
+      "sum": 190473,
       "min": 0,
-      "max": 7244,
-      "median": 1755.0,
-      "zeros": 6,
+      "max": 2006,
+      "median": 322.5,
+      "zeros": 14,
       "negative": 0
     },
     "poblacion_15_64": {
       "missing": 0,
       "null": 0,
       "numeric_count": 526,
-      "sum": 0,
+      "sum": 670763,
       "min": 0,
-      "max": 0,
-      "median": 0.0,
-      "zeros": 526,
+      "max": 5041,
+      "median": 1234.5,
+      "zeros": 10,
       "negative": 0
     },
     "poblacion_65_mas": {
       "missing": 0,
       "null": 0,
       "numeric_count": 526,
-      "sum": 0,
+      "sum": 93599,
       "min": 0,
-      "max": 0,
-      "median": 0.0,
-      "zeros": 526,
+      "max": 1023,
+      "median": 139.5,
+      "zeros": 29,
       "negative": 0
     },
     "poblacion_femenina": {
@@ -123,11 +125,11 @@
       "missing": 0,
       "null": 0,
       "numeric_count": 526,
-      "sum": 0,
+      "sum": 294340,
       "min": 0,
-      "max": 0,
-      "median": 0.0,
-      "zeros": 526,
+      "max": 1966,
+      "median": 553.5,
+      "zeros": 11,
       "negative": 0
     },
     "poblacion_total": {
@@ -165,9 +167,9 @@
     "complete_demographic_rows": 526,
     "population_zero": 6,
     "population_below_100_including_zero": 32,
-    "age_0_14_equals_total": 526,
-    "age_0_14_equals_positive_total_other_groups_zero": 520,
-    "derived_pea_rate_100_percent": 516,
+    "age_0_14_equals_total": 6,
+    "age_0_14_equals_positive_total_other_groups_zero": 0,
+    "derived_pea_rate_100_percent": 1,
     "sex_total_mismatch": 4,
     "max_sex_total_gap": 24,
     "business_field_present": 0,
@@ -175,14 +177,9 @@
   },
   "findings": [
     {
-      "severity": "error",
-      "check": "systematic_age_mapping",
-      "rows": 520
-    },
-    {
       "severity": "warning",
       "check": "derived_pea_rate_100_percent",
-      "rows": 516
+      "rows": 1
     },
     {
       "severity": "warning",

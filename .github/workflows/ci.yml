@@ -43,6 +43,12 @@ jobs:
           # Treat all errors as warnings for PEP8 formatting check
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=.venv,venv,node_modules,.next
 
+      - name: Run QA Regression Tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Audit Committed Demographic Artifact
+        run: python -m src.qa.audit_local_data --output .cache/local_data_audit.json --check
+
       - name: Verify Supabase Environment Configuration
         run: |
           python -c "

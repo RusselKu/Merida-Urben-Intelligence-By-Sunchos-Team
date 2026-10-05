@@ -1,0 +1,252 @@
+{
+  "source_url": "https://www.inegi.org.mx/contenidos/programas/ccpv/2020/datosabiertos/ageb_manzana/ageb_mza_urbana_31_cpv2020_csv.zip",
+  "census_file": "conjunto_de_datos_ageb_urbana_31_cpv2020.csv",
+  "census_sha256": "a7215cad3366e3e6e0440649c95ea9cd751a5059fe55afa4bd9f2a29b5f39642",
+  "input_sha256": "5669b6b82bec7423c7a11574f3a45f1d96c1a3f5ae63cfaa4f6f8fbd2aa2bbff",
+  "output_sha256": "a6f66cbc6433c2a6d70dca9bf4b5bb3df0b36e5e5fa366d2897edd57ed7c1b8e",
+  "raw_census_rows": 40140,
+  "selected_census_agebs": 526,
+  "geojson_agebs": 526,
+  "census_only_keys": [],
+  "geojson_only_keys": [],
+  "changed_features": 520,
+  "changed_fields": {
+    "poblacion_0_14": 520,
+    "poblacion_15_64": 516,
+    "poblacion_65_mas": 497,
+    "poblacion_pnea": 515
+  },
+  "totals_before": {
+    "poblacion_total": 957399,
+    "poblacion_masculina": 460320,
+    "poblacion_femenina": 497040,
+    "poblacion_0_14": 957399,
+    "poblacion_15_64": 0,
+    "poblacion_65_mas": 0,
+    "poblacion_pea": 508151,
+    "poblacion_pnea": 0,
+    "total_viviendas": 359495
+  },
+  "totals_after": {
+    "poblacion_total": 957399,
+    "poblacion_masculina": 460320,
+    "poblacion_femenina": 497040,
+    "poblacion_0_14": 190473,
+    "poblacion_15_64": 670763,
+    "poblacion_65_mas": 93599,
+    "poblacion_pea": 508151,
+    "poblacion_pnea": 294340,
+    "total_viviendas": 359495
+  },
+  "field_mapping": {
+    "poblacion_total": "POBTOT",
+    "poblacion_masculina": "POBMAS",
+    "poblacion_femenina": "POBFEM",
+    "poblacion_0_14": "POB0_14",
+    "poblacion_15_64": "POB15_64",
+    "poblacion_65_mas": "POB65_MAS",
+    "poblacion_pea": "PEA",
+    "poblacion_pnea": "PE_INAC",
+    "total_viviendas": "VIVTOT"
+  },
+  "suppressed_values": {
+    "poblacion_total": [],
+    "poblacion_masculina": [
+      {
+        "cvegeo": "3105000010879",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015386",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015992",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000933820",
+        "token": "*"
+      }
+    ],
+    "poblacion_femenina": [
+      {
+        "cvegeo": "3105000010879",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015386",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015992",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000933820",
+        "token": "*"
+      }
+    ],
+    "poblacion_0_14": [
+      {
+        "cvegeo": "3105000010027",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000010879",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015386",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015992",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000016350",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000016581",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000933820",
+        "token": "*"
+      }
+    ],
+    "poblacion_15_64": [
+      {
+        "cvegeo": "3105000010879",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015386",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015992",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000933820",
+        "token": "*"
+      }
+    ],
+    "poblacion_65_mas": [
+      {
+        "cvegeo": "3105000010027",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000010879",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015386",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015390",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015992",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000016172",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000016350",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000017039",
+        "token": "*"
+      },
+      {
+        "cvegeo": "310500075441A",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000754439",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000774941",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000775530",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000930135",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000933820",
+        "token": "*"
+      }
+    ],
+    "poblacion_pea": [
+      {
+        "cvegeo": "3105000010879",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015386",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015992",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000933820",
+        "token": "*"
+      }
+    ],
+    "poblacion_pnea": [
+      {
+        "cvegeo": "3105000010879",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015386",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000015992",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000016350",
+        "token": "*"
+      },
+      {
+        "cvegeo": "3105000933820",
+        "token": "*"
+      }
+    ],
+    "total_viviendas": []
+  },
+  "locality_counts": {
+    "0001": 483,
+    "0075": 10,
+    "0077": 8,
+    "0084": 13,
+    "0093": 8,
+    "0111": 4
+  },
+  "limitations": [
+    "No Supabase access; remote geography coverage is not reconciled.",
+    "Existing geometries and areas are preserved, not revalidated.",
+    "Suppressed values become zero to match current ETL; zero is not always observed absence.",
+    "INEGI broad age totals need not sum to population because of suppression or unspecified age."
+  ]
+}

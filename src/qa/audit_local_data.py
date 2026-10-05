@@ -22,7 +22,7 @@ DEMOGRAPHIC_FIELDS = (
 )
 REQUIRED_FIELDS = ("cvegeo", "area_km2") + DEMOGRAPHIC_FIELDS
 RAW_PATTERNS = {
-    "census": ("*ageb_urbana_31_cpv2020.csv",),
+    "census": ("conjunto_de_datos_ageb_urbana_31_cpv2020.csv",),
     "denue": ("denue_inegi_31_.csv",),
     "cartography": ("31a.shp",),
     "crime": ("*crimen*.csv", "*delito*.csv"),

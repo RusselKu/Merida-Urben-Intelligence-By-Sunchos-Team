@@ -1,75 +1,70 @@
-import React, { useEffect, useRef } from 'react';
-import maplibregl from 'maplibre-gl';
-import { Activity, ShieldAlert, Building2, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import { Activity, MapPinned, X } from 'lucide-react';
+import UrbanMap from './components/map/UrbanMap';
+import { AnalyticsPanel } from './components/charts';
 import './App.css';
 
 export default function App() {
-  const mapContainer = useRef(null);
-  const map = useRef(null);
-
-  useEffect(() => {
-    if (map.current) return;
-
-    // Initialize MapLibre with CartoDB Dark Matter tiles (No API key needed)
-    map.current = new maplibregl.Map({
-      container: mapContainer.current,
-      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-      center: [-89.6237, 20.9674], // Mérida Coordinates
-      zoom: 11.5,
-      pitch: 30
-    });
-
-    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
+  const [selectedCvegeo, setSelectedCvegeo] = useState(null);
 
   return (
     <div className="app-container">
-      {/* Sidebar Controls & KPI Overview */}
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="sidebar-title">
-            <Activity className="text-cyan-400" size={24} />
-            Mérida Intelligence
+      <main className="map-pane">
+        <header className="map-brand">
+          <div className="map-brand__title">
+            <Activity size={22} />
+            Mérida Urban Intelligence
           </div>
-          <p className="sidebar-subtitle">Geospatial Data Warehouse & Urban Analytics</p>
-        </div>
+
+          <p>
+            Geospatial Data Warehouse & Urban Analytics
+          </p>
+        </header>
+
+        <UrbanMap
+          selectedCvegeo={selectedCvegeo}
+          onSelectAgeb={setSelectedCvegeo}
+        />
+      </main>
+
+      <aside className="analytics-sidebar">
+        <header className="sidebar-header">
+          <div>
+            <div className="sidebar-title">
+              <MapPinned size={20} />
+              Urban Analytics
+            </div>
+
+            <p className="sidebar-subtitle">
+              INEGI Census 2020 · DENUE · PostGIS
+            </p>
+          </div>
+
+          {selectedCvegeo && (
+            <div className="selected-ageb">
+              <div>
+                <span>Selected AGEB</span>
+                <strong>{selectedCvegeo}</strong>
+              </div>
+
+              <button
+                type="button"
+                title="Clear AGEB selection"
+                onClick={() => setSelectedCvegeo(null)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
+        </header>
 
         <div className="sidebar-content">
-          <div className="kpi-card">
-            <div className="kpi-label">Analyzed Urban AGEBs</div>
-            <div className="kpi-value">526</div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-label">Total Population (INEGI 2020)</div>
-            <div className="kpi-value">887,632</div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-label">Registered Businesses (DENUE)</div>
-            <div className="kpi-value">56,664</div>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-label">Spatial Analysis Engine</div>
-            <div className="kpi-value" style={{ fontSize: '1.1rem', color: '#38bdf8' }}>
-              Global & Local Moran's I (LISA)
-            </div>
-          </div>
+          <AnalyticsPanel
+            selectedCvegeo={selectedCvegeo}
+            onSelectAgeb={setSelectedCvegeo}
+          />
         </div>
       </aside>
-
-      {/* MapLibre GIS Canvas */}
-      <main className="map-container">
-        <div ref={mapContainer} className="map-canvas" />
-      </main>
     </div>
   );
 }

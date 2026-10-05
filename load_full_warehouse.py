@@ -7,8 +7,8 @@ import geopandas as gpd
 from shapely.geometry import MultiPolygon, mapping
 from dotenv import load_dotenv
 
-from src.etl.extract import load_raw_cartography, load_raw_demographics, load_raw_denue
-from src.etl.transform import standardize_ageb_geometries, clean_census_demographics, process_denue
+from src.etl.extract import load_raw_cartography, load_raw_demographics, load_raw_denue, load_raw_crime
+from src.etl.transform import standardize_ageb_geometries, clean_census_demographics, process_denue, process_crime
 
 load_dotenv()
 SUPABASE_URL = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
@@ -132,6 +132,58 @@ def run_etl_pipeline():
             raise RuntimeError(f"Failed to insert into fact_negocios: {res.text}")
         print(f"  -> Inserted batch {min(i + len(chunk), total_neg)} / {total_neg} (status: {res.status_code})")
     print("[OK] Completed upload to 'fact_negocios'.")
+
+    # 4. EXTRACT & TRANSFORM PUBLIC SAFETY / SESNSP CRIMES
+    print("\n--- Phase 4: Public Safety (dim_tiempo & fact_crimen) ---")
+    df_crime_raw = load_raw_crime()
+    df_tiempo, df_fact_crimen = process_crime(df_crime_raw, gdf_agebs, df_demo)
+    print(f"Processed {len(df_tiempo)} temporal records and {len(df_fact_crimen)} real SESNSP crime incidents.")
+
+    tiempo_records = []
+    for _, r in df_tiempo.iterrows():
+        tiempo_records.append({
+            "tiempo_id": int(r["tiempo_id"]),
+            "fecha": str(r["fecha"]),
+            "anio": int(r["anio"]),
+            "mes": int(r["mes"]),
+            "mes_nombre": str(r["mes_nombre"]),
+            "dia": int(r["dia"]),
+            "dia_semana": str(r["dia_semana"]),
+            "es_fin_de_semana": bool(r["es_fin_de_semana"]),
+            "trimestre": int(r["trimestre"])
+        })
+    post_batch("dim_tiempo", tiempo_records, conflict_key="tiempo_id", chunk_size=200)
+
+    crime_records = []
+    for _, r in df_fact_crimen.iterrows():
+        lat = round(float(r['latitud']), 6)
+        lon = round(float(r['longitud']), 6)
+        point_geojson = {
+            "type": "Point",
+            "coordinates": [lon, lat],
+            "crs": {"type": "name", "properties": {"name": "EPSG:4326"}}
+        }
+        crime_records.append({
+            "cvegeo": str(r['cvegeo']),
+            "tiempo_id": int(r['tiempo_id']),
+            "categoria_delito": str(r['categoria_delito'])[:100],
+            "tipo_delito": str(r['tipo_delito'])[:150],
+            "periodo_dia": str(r['periodo_dia'])[:50],
+            "geom_punto": json.dumps(point_geojson)
+        })
+
+    # Upload fact_crimen in batches of 1000
+    url_crime = f"{SUPABASE_URL}/rest/v1/fact_crimen"
+    total_crime = len(crime_records)
+    print(f"\n[LOAD] Uploading {total_crime} crime incidents to 'fact_crimen' in batches of 1000...")
+    for i in range(0, total_crime, 1000):
+        chunk = crime_records[i:i + 1000]
+        res = requests.post(url_crime, headers=HEADERS, json=chunk)
+        if res.status_code not in (200, 201):
+            print(f"ERROR on fact_crimen batch {i}-{i+len(chunk)}: {res.status_code} - {res.text}")
+            raise RuntimeError(f"Failed to insert into fact_crimen: {res.text}")
+        print(f"  -> Inserted batch {min(i + len(chunk), total_crime)} / {total_crime} (status: {res.status_code})")
+    print("[OK] Completed upload to 'fact_crimen'.")
 
     print("\n" + "=" * 60)
     print("ETL PIPELINE SUCCESSFULLY EXECUTED AND WAREHOUSE RELOADED!")

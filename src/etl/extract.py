@@ -41,8 +41,13 @@ def get_real_paths() -> Dict[str, Optional[Path]]:
     if carto_candidates:
         paths["cartography"] = carto_candidates[0]
         
-    # 4. Crime
-    crime_candidates = list(DATA_RAW_DIR.rglob("*crimen*.csv")) + list(DATA_RAW_DIR.rglob("*delito*.csv"))
+    # 4. Crime (SESNSP / Public Safety Incidents)
+    crime_candidates = (
+        list(DATA_RAW_DIR.rglob("*crimen*.csv")) +
+        list(DATA_RAW_DIR.rglob("*delit*.csv")) +
+        list(DATA_RAW_DIR.rglob("*sesnsp*.csv")) +
+        list(DATA_RAW_DIR.rglob("*crime*.csv"))
+    )
     if crime_candidates:
         paths["crime"] = crime_candidates[0]
         

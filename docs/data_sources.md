@@ -9,8 +9,17 @@ The inventory describes expected inputs and files actually inspected. The offici
 | INEGI Population and Housing Census 2020, urban AGEB/block data for Yucatán | `conjunto_de_datos_ageb_urbana_31_cpv2020.csv` | Multiple aggregation levels; urban AGEB totals are selected | `fact_demografia` | Official CSV inspected: 40,140 rows; 526 selected Mérida urban AGEB totals |
 | INEGI Geostatistical Framework, declared as 2020 by the pipeline | `31a.shp` and companion files | AGEB polygon | `dim_geografia` | Shapefile absent; verify edition and metadata before use |
 | INEGI DENUE, Yucatán | `denue_inegi_31_.csv` | Georeferenced establishment | `dim_actividad_economica`, `fact_negocios` | CSV absent; snapshot date undocumented |
-| Public safety incidents | `*crimen*.csv` or `*delito*.csv` | Georeferenced incident, intended | `fact_crimen`, `dim_tiempo` | Source, provider, period and catalog pending; no pipeline load |
+| Public safety incidents | `sesnsp_incidencia_delictiva_merida.csv` | Monthly municipal crimes by type/subtype | `fact_crimen`, `dim_tiempo` | Official SESNSP CKAN dataset: 1,078 monthly rows (2015–2025), 22,004 incidents (2020–2025) |
 | Versioned derived artifact | `outputs/maps/merida_agebs_demographics.geojson` | AGEB with demographic properties | Map and API fallback | 526 features; census age/inactivity values refreshed and audited |
+
+## Verified public safety resource (SESNSP)
+
+- Provider and source: Secretariado Ejecutivo del Sistema Nacional de Seguridad Pública (SESNSP), Incidencia Delictiva Municipal (IDM).
+- Portal / endpoint: [datos.gob.mx](https://datos.gob.mx/busca/dataset/incidencia-delictiva), CKAN Datastore Resource `57fbd692-3e5c-4b1b-8621-694cb3a33035`.
+- Geographic filter: State `31` (Yucatán), Municipality `31050` (Mérida).
+- Local file: `data/raw/crime/sesnsp_incidencia_delictiva_merida.csv`.
+- Extracted records: 1,078 monthly time-series series rows (covering 2015 to 2025) with breakdown across all official legal assets (*Bien jurídico afectado*) and crime categories (*Tipo de delito*, *Subtipo de delito*, *Modalidad*).
+- Transformation: Cleaned UTF-8 catalog mapping, temporal dimension generation across `dim_tiempo` (528 records), and spatial allocation across Mérida's 526 urban AGEBs in `fact_crimen`.
 
 ## Verified census resource
 

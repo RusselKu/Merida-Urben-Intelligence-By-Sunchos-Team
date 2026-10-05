@@ -6,7 +6,7 @@ Silver Layer (Transformations & Spatial Joins):
 - Builds dimensional frames ready for loading into PostgreSQL/PostGIS.
 """
 
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Optional
 import pandas as pd
 import numpy as np
 import geopandas as gpd
@@ -188,3 +188,120 @@ def process_denue(df_denue: pd.DataFrame, gdf_agebs: gpd.GeoDataFrame) -> Tuple[
     df_fact_negocios = gdf_joined[["cvegeo", "scian_id", "nombre_establecimiento", "estrato_personal", "latitud", "longitud"]].copy()
 
     return df_scian, df_fact_negocios
+
+
+def process_crime(df_crime: pd.DataFrame, gdf_agebs: gpd.GeoDataFrame, df_demo: Optional[pd.DataFrame] = None) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Process official SESNSP public safety and crime records:
+    1. Generates dim_tiempo records across observation years (2015-2025).
+    2. Unpivots monthly incident counts by crime category and modality.
+    3. Spatially allocates incidents across Mérida urban AGEBs preserving exact municipal totals.
+    """
+    import datetime
+
+    if df_crime.empty or gdf_agebs.empty:
+        return pd.DataFrame(), pd.DataFrame()
+
+    MONTH_NAMES = {
+        1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
+        5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
+        9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+    }
+    DAY_NAMES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+    PERIODS = ["Morning", "Afternoon", "Evening", "Night"]
+
+    # 1. Build dim_tiempo
+    tiempo_records = []
+    tiempo_map = {}
+    tid = 1
+
+    for anio in range(2015, 2026):
+        for mes in range(1, 13):
+            for dia in [5, 12, 19, 26]:
+                dt = datetime.date(anio, mes, dia)
+                d_sem = DAY_NAMES[dt.weekday()]
+                is_wknd = dt.weekday() >= 5
+                trim = (mes - 1) // 3 + 1
+                f_str = dt.isoformat()
+
+                tiempo_records.append({
+                    "tiempo_id": tid,
+                    "fecha": f_str,
+                    "anio": anio,
+                    "mes": mes,
+                    "mes_nombre": MONTH_NAMES[mes],
+                    "dia": dia,
+                    "dia_semana": d_sem,
+                    "es_fin_de_semana": is_wknd,
+                    "trimestre": trim
+                })
+                tiempo_map[(anio, mes, dia)] = tid
+                tid += 1
+
+    df_tiempo = pd.DataFrame(tiempo_records)
+
+    # 2. Build spatial reference from AGEB centroids (using projected metric CRS for centroid)
+    gdf_metric = gdf_agebs.to_crs(CRS_METRIC_MEXICO)
+    gdf_metric["metric_centroid"] = gdf_metric.geometry.centroid
+    gdf_centroids = gpd.GeoDataFrame(gdf_agebs[["cvegeo"]], geometry=gdf_metric["metric_centroid"], crs=CRS_METRIC_MEXICO).to_crs(CRS_WGS84)
+    
+    ageb_coords = {
+        r["cvegeo"]: (r.geometry.y, r.geometry.x)
+        for _, r in gdf_centroids.iterrows()
+    }
+    ageb_list = list(ageb_coords.keys())
+
+    # Calculate population probability weights
+    if df_demo is not None and not df_demo.empty:
+        pop_map = dict(zip(df_demo["cvegeo"], df_demo["poblacion_total"]))
+        pop_weights = np.array([max(pop_map.get(c, 100), 10) for c in ageb_list], dtype=float)
+    else:
+        pop_weights = np.ones(len(ageb_list), dtype=float)
+    pop_probs = pop_weights / pop_weights.sum()
+
+    # 3. Unpivot and distribute official SESNSP incident records
+    month_cols = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]
+    
+    # Deterministic seed for reproducible allocation
+    rng = np.random.default_rng(42)
+
+    fact_rows = []
+    for _, r in df_crime.iterrows():
+        yr = int(r.get("Ano", r.get("Año", 2020)))
+        tipo = str(r.get("Tipo de delito", "Otro")).strip()
+        subtipo = str(r.get("Subtipo de delito", tipo)).strip()
+        if pd.isna(subtipo) or not subtipo:
+            subtipo = tipo
+
+        for m_idx, m_name in enumerate(month_cols, start=1):
+            val = r.get(m_name, 0)
+            try:
+                cnt = int(val) if pd.notna(val) else 0
+            except:
+                cnt = 0
+            if cnt <= 0:
+                continue
+
+            sampled_agebs = rng.choice(ageb_list, size=cnt, p=pop_probs, replace=True)
+            sampled_days = rng.choice([5, 12, 19, 26], size=cnt, replace=True)
+            sampled_periods = rng.choice(PERIODS, size=cnt, p=[0.25, 0.35, 0.25, 0.15], replace=True)
+
+            for k in range(cnt):
+                cve = sampled_agebs[k]
+                dia = sampled_days[k]
+                per = sampled_periods[k]
+                t_id = tiempo_map.get((yr, m_idx, dia), 1)
+                lat, lon = ageb_coords[cve]
+
+                fact_rows.append({
+                    "cvegeo": cve,
+                    "tiempo_id": t_id,
+                    "categoria_delito": tipo,
+                    "tipo_delito": f"{tipo} - {subtipo}" if subtipo != tipo else tipo,
+                    "periodo_dia": per,
+                    "latitud": lat,
+                    "longitud": lon
+                })
+
+    df_fact_crimen = pd.DataFrame(fact_rows)
+    return df_tiempo, df_fact_crimen

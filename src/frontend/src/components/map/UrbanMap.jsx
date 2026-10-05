@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { getAgebReferenceArea } from '../../data/agebReferenceAreas';
 import './UrbanMap.css';
 
 const GEOJSON_URL =
@@ -364,24 +365,54 @@ export default function UrbanMap({
         const metricConfig = KPI_LOOKUP[metric];
         const properties = feature.properties;
 
+        const referenceArea =
+          getAgebReferenceArea(properties.cvegeo);
+
+        const areaName =
+          referenceArea?.name || 'Not available';
+
+        const areaType =
+          referenceArea?.type
+            ? ` · ${referenceArea.type}`
+            : '';
+
+        const postalCode =
+          referenceArea?.postalCode
+            ? ` · CP ${referenceArea.postalCode}`
+            : '';
+
         popup.current
           .setLngLat(event.lngLat)
           .setHTML(`
             <div class="map-popup">
-              <strong>AGEB ${properties.cvegeo}</strong>
+              <strong>${areaName}</strong>
+
+              <span>
+                AGEB ${properties.cvegeo}
+              </span>
+
+              ${
+                referenceArea
+                  ? `<span>${areaType.replace(' · ', '')}${postalCode}</span>`
+                  : ''
+              }
+
               <span>
                 ${metricConfig.label}:
                 <b>${formatNumber(properties[metric])}</b>
                 ${metricConfig.unit}
               </span>
+
               <span>
                 Population:
                 <b>${formatNumber(properties.poblacion_total)}</b>
               </span>
+
               <span>
                 Businesses:
                 <b>${formatNumber(properties.total_negocios)}</b>
               </span>
+
               <small>Click to inspect this AGEB</small>
             </div>
           `)
@@ -559,9 +590,7 @@ export default function UrbanMap({
                     backgroundColor: stop.color,
                   }}
                 />
-                <span>
-                  {formatNumber(stop.value)}
-                </span>
+                <span>{formatNumber(stop.value)}</span>
               </div>
             ))}
           </div>

@@ -2,10 +2,14 @@ import React, { useState } from 'react';
 import { Activity, MapPinned, X } from 'lucide-react';
 import UrbanMap from './components/map/UrbanMap';
 import { AnalyticsPanel } from './components/charts';
+import { getAgebReferenceArea } from './data/agebReferenceAreas';
 import './App.css';
 
 export default function App() {
   const [selectedCvegeo, setSelectedCvegeo] = useState(null);
+
+  const selectedReferenceArea =
+    getAgebReferenceArea(selectedCvegeo);
 
   return (
     <div className="app-container">
@@ -45,12 +49,35 @@ export default function App() {
               <div>
                 <span>Selected AGEB</span>
                 <strong>{selectedCvegeo}</strong>
+
+                <span className="selected-ageb__area">
+                  Reference area
+                </span>
+
+                <strong className="selected-ageb__area-name">
+                  {selectedReferenceArea?.name ||
+                    'Not available'}
+                </strong>
+
+                {selectedReferenceArea?.type && (
+                  <small className="selected-ageb__area-detail">
+                    {selectedReferenceArea.type}
+                  </small>
+                )}
+
+                {selectedReferenceArea?.postalCode && (
+                  <small className="selected-ageb__area-detail">
+                    CP {selectedReferenceArea.postalCode}
+                  </small>
+                )}
               </div>
 
               <button
                 type="button"
                 title="Clear AGEB selection"
-                onClick={() => setSelectedCvegeo(null)}
+                onClick={() =>
+                  setSelectedCvegeo(null)
+                }
               >
                 <X size={16} />
               </button>

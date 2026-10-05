@@ -205,18 +205,19 @@ merida-urban-intelligence/
 │   └── processed/                 # Generated intermediate GeoJSONs and layers
 ├── docs/
 │   ├── data_dictionary.md         # Data dictionary and field specs
-│   └── warehouse_model.png        # Dimensional ERD diagram
+│   ├── warehouse_model.md         # Implemented dimensional ERD (Mermaid)
+│   ├── data_sources.md            # Source inventory and pending metadata
+│   └── initial_data_audit.md      # Local QA evidence and acceptance criteria
 ├── notebooks/
-│   ├── 01_data_profiling.ipynb    # Data source profiling & spatial join POC
-│   ├── 02_spatial_join_test.ipynb # Point-to-polygon validation
-│   └── 03_moran_analytics.ipynb   # Global Moran, LISA & Bivariate analysis
+│   └── 01_data_profiling_and_spatial_integration.ipynb # Local profiling & synthetic spatial join POC
 ├── outputs/
 │   ├── figures/                   # Exported correlation plots & Moran scatterplots
 │   └── maps/                      # Exported choropleth maps & GeoJSON layers
 ├── sql/
 │   ├── 01_schema.sql              # PostGIS extensions, dimensions, and facts DDL
-│   ├── 02_load.sql                # Data loading and integrity constraints
-│   └── 03_views.sql               # Analytical views for required KPIs
+│   ├── 02_load_*.sql              # Exported data loading scripts
+│   ├── 03_views.sql               # Analytical views for required KPIs
+│   └── 04_quality_checks.sql      # Read-only warehouse validation queries
 ├── src/
 │   ├── backend/                   # FastAPI REST API with PySAL & Supabase SDK
 │   ├── etl/                       # Medallion Architecture Python pipeline
@@ -278,7 +279,7 @@ docker compose up --build etl-pipeline
 
 ### Step 5: Start the FastAPI Backend
 ```bash
-uvicorn src.backend.main:app --reload --port 8000
+python src/backend/run.py
 ```
 *Interactive API documentation is available at:* `http://localhost:8000/docs`
 
@@ -289,6 +290,29 @@ npm install
 npm run dev
 ```
 *Dashboard will be available at:* `http://localhost:3000`
+
+### Data Quality & Documentation (Jonathan)
+
+The [data dictionary](docs/data_dictionary.md) describes the implemented tables,
+source mappings, nullable fields, and KPI view. See the [dimensional model](docs/warehouse_model.md),
+[source inventory](docs/data_sources.md), and [initial audit](docs/initial_data_audit.md)
+for observed evidence and pending checks.
+
+Run the local GeoJSON audit from the repository root (Python standard library only):
+
+```bash
+python -m src.qa.audit_local_data --output outputs/qa/local_data_audit.json
+```
+
+Add `--check` to return exit code 1 when error findings are detected. The committed
+GeoJSON currently has incorrect age-group and inactive-population values; it needs
+regeneration from the original census. Missing business/crime fields do not mean
+zero observations. This local audit does not query Supabase or validate topology.
+
+After loading the warehouse, run [04_quality_checks.sql](sql/04_quality_checks.sql)
+with access to all rows and preserve its results. These SQL checks have not yet been
+executed against a live warehouse. The Docker backend startup command also remains
+pending correction; use the Python launcher above for local development.
 
 ---
 

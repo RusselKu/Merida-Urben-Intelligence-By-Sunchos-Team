@@ -1,0 +1,199 @@
+{
+  "input_file": "merida_agebs_demographics.geojson",
+  "sha256": "21013fd890b423dead5153c94bdac6d5c10f5a378a76a610e67fbd6589d0b967",
+  "features": 526,
+  "geometry_types": {
+    "Polygon": 526
+  },
+  "raw_inventory": {
+    "census": [],
+    "denue": [],
+    "cartography": [],
+    "crime": []
+  },
+  "properties": {
+    "area_km2": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 526,
+      "sum": 259.8632,
+      "min": 0.0122,
+      "max": 6.5497,
+      "median": 0.40565,
+      "zeros": 0,
+      "negative": 0
+    },
+    "cve_ageb": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 0
+    },
+    "cve_ent": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 0
+    },
+    "cve_loc": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 0
+    },
+    "cve_mun": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 0
+    },
+    "cvegeo": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 0
+    },
+    "nom_asentamiento": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 0
+    },
+    "poblacion_0_14": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 526,
+      "sum": 957399,
+      "min": 0,
+      "max": 7244,
+      "median": 1755.0,
+      "zeros": 6,
+      "negative": 0
+    },
+    "poblacion_15_64": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 526,
+      "sum": 0,
+      "min": 0,
+      "max": 0,
+      "median": 0.0,
+      "zeros": 526,
+      "negative": 0
+    },
+    "poblacion_65_mas": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 526,
+      "sum": 0,
+      "min": 0,
+      "max": 0,
+      "median": 0.0,
+      "zeros": 526,
+      "negative": 0
+    },
+    "poblacion_femenina": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 526,
+      "sum": 497040,
+      "min": 0,
+      "max": 3772,
+      "median": 920.5,
+      "zeros": 10,
+      "negative": 0
+    },
+    "poblacion_masculina": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 526,
+      "sum": 460320,
+      "min": 0,
+      "max": 3472,
+      "median": 835.5,
+      "zeros": 10,
+      "negative": 0
+    },
+    "poblacion_pea": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 526,
+      "sum": 508151,
+      "min": 0,
+      "max": 4146,
+      "median": 934.0,
+      "zeros": 10,
+      "negative": 0
+    },
+    "poblacion_pnea": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 526,
+      "sum": 0,
+      "min": 0,
+      "max": 0,
+      "median": 0.0,
+      "zeros": 526,
+      "negative": 0
+    },
+    "poblacion_total": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 526,
+      "sum": 957399,
+      "min": 0,
+      "max": 7244,
+      "median": 1755.0,
+      "zeros": 6,
+      "negative": 0
+    },
+    "tipo_asentamiento": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 0
+    },
+    "total_viviendas": {
+      "missing": 0,
+      "null": 0,
+      "numeric_count": 526,
+      "sum": 359495,
+      "min": 0,
+      "max": 3268,
+      "median": 655.5,
+      "zeros": 3,
+      "negative": 0
+    }
+  },
+  "checks": {
+    "invalid_cvegeo": 0,
+    "duplicate_cvegeo_rows": 0,
+    "nonpositive_or_missing_area": 0,
+    "complete_demographic_rows": 526,
+    "population_zero": 6,
+    "population_below_100_including_zero": 32,
+    "age_0_14_equals_total": 526,
+    "age_0_14_equals_positive_total_other_groups_zero": 520,
+    "derived_pea_rate_100_percent": 516,
+    "sex_total_mismatch": 4,
+    "max_sex_total_gap": 24,
+    "business_field_present": 0,
+    "crime_field_present": 0
+  },
+  "findings": [
+    {
+      "severity": "error",
+      "check": "systematic_age_mapping",
+      "rows": 520
+    },
+    {
+      "severity": "warning",
+      "check": "derived_pea_rate_100_percent",
+      "rows": 516
+    },
+    {
+      "severity": "warning",
+      "check": "sex_total_mismatch",
+      "rows": 4
+    }
+  ],
+  "limitations": [
+    "Local file only; no Supabase query.",
+    "No validation of geometry topology, coordinate bounds or CRS accuracy.",
+    "Missing business/crime fields do not mean zero observations.",
+    "A 100% PEA rate or a sex total gap requires source review, not automatic correction."
+  ]
+}

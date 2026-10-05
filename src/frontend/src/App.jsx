@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Activity, MapPinned, X } from 'lucide-react';
 import UrbanMap from './components/map/UrbanMap';
 import { AnalyticsPanel } from './components/charts';
+import UrbanInsightStory from './components/insights/UrbanInsightStory';
 import { getAgebReferenceArea } from './data/agebReferenceAreas';
 import './App.css';
 
@@ -86,6 +87,11 @@ export default function App() {
         </header>
 
         <div className="sidebar-content">
+          <UrbanInsightStory
+            selectedCvegeo={selectedCvegeo}
+            referenceArea={selectedReferenceArea}
+          />
+
           <AnalyticsPanel
             selectedCvegeo={selectedCvegeo}
             onSelectAgeb={setSelectedCvegeo}

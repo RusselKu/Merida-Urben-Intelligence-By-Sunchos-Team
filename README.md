@@ -94,66 +94,11 @@ To integrate datasets with varying native spatial granularities, three alternati
 
 The Data Warehouse implements a multidimensional dimensional schema optimized for aggregations and spatial queries:
 
-```mermaid
-erDiagram
-    dim_geografia ||--o{ fact_demografia : "cvegeo"
-    dim_geografia ||--o{ fact_negocios : "cvegeo"
-    dim_geografia ||--o{ fact_crimen : "cvegeo"
-    dim_tiempo ||--o{ fact_crimen : "tiempo_id"
-    dim_tiempo ||--o{ fact_negocios : "tiempo_id"
-    dim_actividad_economica ||--o{ fact_negocios : "scian_id"
+![Implemented warehouse model](docs/warehouse_model.png)
 
-    dim_geografia {
-        varchar cvegeo PK
-        varchar nom_asentamiento
-        geometry geom_4326 "GIST Index"
-        geometry geom_6372 "Metric Area"
-        numeric area_km2
-    }
-
-    dim_tiempo {
-        int tiempo_id PK
-        int anio
-        int mes
-        int dia_semana
-        varchar periodo_dia
-    }
-
-    dim_actividad_economica {
-        varchar scian_id PK
-        varchar sector_codigo
-        varchar sector_nombre
-        varchar categoria_macro
-    }
-
-    fact_demografia {
-        int fact_demografia_id PK
-        varchar cvegeo FK
-        int poblacion_total
-        int poblacion_pea
-        int poblacion_0_14
-        int poblacion_15_64
-        int poblacion_65_mas
-    }
-
-    fact_negocios {
-        int fact_negocio_id PK
-        varchar cvegeo FK
-        varchar scian_id FK
-        int tiempo_id FK
-        geometry geom_punto
-        varchar estrato_personal
-    }
-
-    fact_crimen {
-        int fact_crimen_id PK
-        varchar cvegeo FK
-        int tiempo_id FK
-        geometry geom_punto
-        varchar categoria_delito
-        varchar tipo_delito
-    }
-```
+See the [canonical Mermaid ERD](docs/warehouse_model.md) for the actual keys,
+optional date relationships and zero-or-one demographic row per AGEB.
+The [data dictionary](docs/data_dictionary.md) covers all implemented columns.
 
 ---
 
@@ -205,18 +150,20 @@ merida-urban-intelligence/
 │   └── processed/                 # Generated intermediate GeoJSONs and layers
 ├── docs/
 │   ├── data_dictionary.md         # Data dictionary and field specs
-│   └── warehouse_model.png        # Dimensional ERD diagram
+│   ├── warehouse_model.md         # Implemented dimensional ERD (Mermaid)
+│   ├── warehouse_model.png        # ERD export for the PDF report
+│   ├── data_sources.md            # Source inventory and pending metadata
+│   └── initial_data_audit.md      # Local QA evidence and acceptance criteria
 ├── notebooks/
-│   ├── 01_data_profiling.ipynb    # Data source profiling & spatial join POC
-│   ├── 02_spatial_join_test.ipynb # Point-to-polygon validation
-│   └── 03_moran_analytics.ipynb   # Global Moran, LISA & Bivariate analysis
+│   └── 01_data_profiling_and_spatial_integration.ipynb # Local profiling & synthetic spatial join POC
 ├── outputs/
 │   ├── figures/                   # Exported correlation plots & Moran scatterplots
 │   └── maps/                      # Exported choropleth maps & GeoJSON layers
 ├── sql/
 │   ├── 01_schema.sql              # PostGIS extensions, dimensions, and facts DDL
-│   ├── 02_load.sql                # Data loading and integrity constraints
-│   └── 03_views.sql               # Analytical views for required KPIs
+│   ├── 02_load_*.sql              # Exported data loading scripts
+│   ├── 03_views.sql               # Analytical views for required KPIs
+│   └── 04_quality_checks.sql      # Read-only warehouse validation queries
 ├── src/
 │   ├── backend/                   # FastAPI REST API with PySAL & Supabase SDK
 │   ├── etl/                       # Medallion Architecture Python pipeline
@@ -278,7 +225,7 @@ docker compose up --build etl-pipeline
 
 ### Step 5: Start the FastAPI Backend
 ```bash
-uvicorn src.backend.main:app --reload --port 8000
+python src/backend/run.py
 ```
 *Interactive API documentation is available at:* `http://localhost:8000/docs`
 
@@ -289,6 +236,46 @@ npm install
 npm run dev
 ```
 *Dashboard will be available at:* `http://localhost:3000`
+
+### Data Quality & Documentation (Jonathan)
+
+The [data dictionary](docs/data_dictionary.md) describes the implemented tables,
+source mappings, nullable fields, and KPI view. See the [dimensional model](docs/warehouse_model.md),
+[source inventory](docs/data_sources.md), and [initial audit](docs/initial_data_audit.md)
+for observed evidence and pending checks.
+
+Run the local GeoJSON audit from the repository root (Python standard library only):
+
+```bash
+python -m src.qa.audit_local_data --output outputs/qa/local_data_audit.json
+```
+
+Add `--check` to return exit code 1 when error findings are detected. The committed
+GeoJSON now contains age-group and inactive-population values refreshed from the
+official INEGI Census 2020; see the [provenance report](outputs/qa/demographic_refresh.json). Missing business/crime fields do not mean
+zero observations. This local audit does not query Supabase or validate topology.
+
+Run the five standard-library regression tests with
+`python -m unittest discover -s tests -v`. CI executes these tests and audits the
+committed demographic artifact on pull requests.
+
+To reproduce the demographic refresh after downloading the exact census source
+listed in the [source inventory](docs/data_sources.md):
+
+```bash
+python -m src.qa.refresh_demographic_geojson --census data/raw/census_2020/conjunto_de_datos_ageb_urbana_31_cpv2020.csv --dry-run
+python -m src.qa.refresh_demographic_geojson --census data/raw/census_2020/conjunto_de_datos_ageb_urbana_31_cpv2020.csv
+```
+
+The local census and GeoJSON have the same 526 keys. The reviewer reported 531
+warehouse AGEBs; follow the [key reconciliation procedure](docs/initial_data_audit.md#warehouse-coverage-reconciliation-531-reported-vs-526-local)
+before treating these coverages as equivalent.
+
+After loading the warehouse, run [04_quality_checks.sql](sql/04_quality_checks.sql)
+with access to all rows and preserve its results. The reviewer reported that all
+17 SELECT queries execute on PostgreSQL 16 + PostGIS 3 against the project schema;
+live Supabase data validation remains pending. The Docker backend startup command also remains
+pending correction; use the Python launcher above for local development.
 
 ---
 

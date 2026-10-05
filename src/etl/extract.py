@@ -26,7 +26,8 @@ def get_real_paths() -> Dict[str, Optional[Path]]:
     }
     
     # 1. Census
-    census_candidates = list(DATA_RAW_DIR.rglob("*ageb_urbana_31_cpv2020.csv"))
+    # The INEGI dictionary shares the suffix; select the dataset, not metadata.
+    census_candidates = sorted(DATA_RAW_DIR.rglob("conjunto_de_datos_ageb_urbana_31_cpv2020.csv"))
     if census_candidates:
         paths["census"] = census_candidates[0]
         

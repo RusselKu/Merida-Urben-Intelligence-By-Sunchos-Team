@@ -1,0 +1,226 @@
+/* Analytics panel & ApexCharts components — uses the variables from src/index.css */
+
+.analytics-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--text-primary);
+}
+
+.analytics-panel--status {
+  padding: 16px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+}
+
+.analytics-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+}
+
+.analytics-tabs button,
+.chart-toggle button {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 7px 8px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.analytics-tabs button:hover,
+.chart-toggle button:hover {
+  color: var(--text-primary);
+}
+
+.analytics-tabs button.is-active,
+.chart-toggle button.is-active {
+  background: rgba(6, 182, 212, 0.15);
+  color: #67e8f9;
+}
+
+.analytics-context {
+  font-size: 0.78rem;
+  color: #67e8f9;
+}
+
+.analytics-footer {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+/* ---- Chart card ---- */
+.chart-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px 14px 8px;
+}
+
+.chart-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.chart-card__title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.chart-card__subtitle {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.chart-card__empty {
+  padding: 28px 12px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.chart-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.chart-toggle button {
+  padding: 4px 10px;
+  font-size: 0.72rem;
+}
+
+.chart-select {
+  max-width: 220px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font: inherit;
+  font-size: 0.74rem;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  padding: 0 4px 8px;
+}
+
+.chart-legend i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  margin-right: 5px;
+}
+
+.chart-note {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  padding: 0 4px 8px;
+}
+
+.stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+  padding: 4px 4px 6px;
+}
+
+.stat-row span {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+.stat-row b {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(156, 163, 175, 0.15);
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.badge--ok {
+  background: rgba(52, 211, 153, 0.15);
+  color: #6ee7b7;
+}
+
+/* ---- KPI tiles ---- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.kpi-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+}
+
+.kpi-tile__group {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-cyan);
+}
+
+.kpi-tile__value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-tile__label {
+  font-size: 0.76rem;
+}
+
+.kpi-tile__unit {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+/* ApexCharts custom tooltip */
+.apex-tip {
+  padding: 8px 10px;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}

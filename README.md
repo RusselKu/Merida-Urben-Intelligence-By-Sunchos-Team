@@ -113,8 +113,8 @@ The [data dictionary](docs/data_dictionary.md) covers all implemented columns.
 | **Economic** | **Total Businesses** | $\text{Count}(\text{DENUE Establishments})$ | Count per AGEB |
 | **Economic** | **Business Density** | $\frac{\text{Total Businesses}}{\text{Area in } \text{km}^2}$ | Businesses / $\text{km}^2$ |
 | **Economic** | **Businesses per 1k Residents** | $\frac{\text{Total Businesses}}{\text{Total Population}} \times 1,000$ | Rate per 1k pop |
-| **Economic** | **Retail Density** | $\frac{\text{Retail Establishments (SCIAN 46-47)}}{\text{Area in } \text{km}^2}$ | Stores / $\text{km}^2$ |
-| **Economic** | **Service Density** | $\frac{\text{Service Establishments (SCIAN 54-81)}}{\text{Area in } \text{km}^2}$ | Services / $\text{km}^2$ |
+| **Economic** | **Retail Density** | $\frac{\text{Retail Establishments (SCIAN 43, 46-47)}}{\text{Area in } \text{km}^2}$ | Stores / $\text{km}^2$ |
+| **Economic** | **Service Density** | $\frac{\text{Service Establishments (SCIAN 51-81)}}{\text{Area in } \text{km}^2}$ | Services / $\text{km}^2$ |
 | **Economic** | **Dominant Economic Activity** | $\text{Mode}(\text{SCIAN Sector})$ by establishment count | Dominant sector |
 | **Public Safety** | **Total Crime Incidents** | $\sum \text{Georeferenced Incidents assigned to polygon}$ | Count per AGEB |
 | **Public Safety** | **Crime Rate** | $\frac{\text{Total Incidents}}{\text{Total Population}} \times 1,000$ | Incidents / 1k pop |
@@ -176,6 +176,7 @@ merida-urban-intelligence/
 ├── Dockerfile                     # Geospatial container definition (GDAL/GEOS/PROJ)
 ├── docker-compose.yml             # Container orchestration
 ├── requirements.txt               # Pinned Python dependencies
+├── ProjectReport.pdf             # Final IEEE 6-page technical report (PDF)
 └── README.md                      # Primary project documentation
 ```
 

@@ -80,9 +80,11 @@ body {
   color: var(--text-primary);
   overflow: hidden;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
   caret-color: var(--accent-cyan);
   scrollbar-color: rgba(244, 241, 236, 0.16) transparent;
   scrollbar-width: thin;

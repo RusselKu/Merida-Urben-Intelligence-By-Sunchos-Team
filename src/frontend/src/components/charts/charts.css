@@ -479,3 +479,76 @@
   font-size: 0.68rem;
   color: var(--text-muted);
 }
+
+/* ==========================================================
+   MOBILE RESPONSIVENESS FOR CHARTS & KPIS
+   ========================================================== */
+@media (max-width: 768px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .kpi-tile {
+    padding: 10px;
+  }
+
+  .kpi-tile__value {
+    font-size: 1.15rem;
+  }
+
+  .analytics-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 3px;
+    padding: 3px;
+  }
+
+  .analytics-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .analytics-tab-btn {
+    padding: 7px 9px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    flex: 1 0 auto;
+  }
+
+  .chart-card {
+    padding: 12px;
+  }
+
+  .chart-card__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .chart-card__actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .chart-select {
+    width: 100%;
+    max-width: 100%;
+    font-size: 0.76rem;
+  }
+
+  .stat-row {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .stat-row div {
+    flex: 1 1 40%;
+  }
+
+  .apexcharts-canvas {
+    max-width: 100% !important;
+  }
+}
+

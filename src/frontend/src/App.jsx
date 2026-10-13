@@ -12,6 +12,7 @@ import {
   Layers,
   MapPin,
   Sparkles,
+  ChevronRight,
 } from 'lucide-react';
 import UrbanMap from './components/map/UrbanMap';
 import { AnalyticsPanel } from './components/charts';
@@ -29,8 +30,11 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeResult, setActiveResult] = useState(0);
+  const [mobileTab, setMobileTab] = useState('map');
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const searchRef = useRef(null);
+  const mobileSearchInputRef = useRef(null);
   const scrollRef = useRef(null);
   const dossierRef = useRef(null);
 
@@ -62,6 +66,13 @@ export default function App() {
     if (selectedCvegeo) dossierRef.current?.focus();
   }, [selectedCvegeo]);
 
+  // Focus mobile input when mobile search bar opens
+  useEffect(() => {
+    if (mobileSearchOpen) {
+      setTimeout(() => mobileSearchInputRef.current?.focus(), 60);
+    }
+  }, [mobileSearchOpen]);
+
   // Click outside search suggestions
   useEffect(() => {
     function handleClickOutside(event) {
@@ -77,7 +88,11 @@ export default function App() {
     setSelectedCvegeo(cvegeo);
     setSearchQuery('');
     setSearchOpen(false);
+    setMobileSearchOpen(false);
     if (!sidebarOpen) setSidebarOpen(true);
+    if (typeof window !== 'undefined' && window.innerWidth <= 860) {
+      setMobileTab('map');
+    }
   };
 
   const handleSearchKeyDown = (event) => {
@@ -99,7 +114,11 @@ export default function App() {
   };
 
   return (
-    <div className={`app-shell ${sidebarOpen ? 'with-sidebar' : 'map-only'}`}>
+    <div
+      className={`app-shell ${sidebarOpen ? 'with-sidebar' : 'map-only'} mobile-view-${mobileTab}${
+        mobileSearchOpen ? ' mobile-search-active' : ''
+      }`}
+    >
       {/* Top Application Header / Command Bar */}
       <header className="app-header glass-panel">
         <div className="app-header__left">
@@ -119,10 +138,14 @@ export default function App() {
         </div>
 
         {/* Global Omni-Search */}
-        <div className="app-header__center" ref={searchRef}>
+        <div
+          className={`app-header__center${mobileSearchOpen ? ' mobile-expanded' : ''}`}
+          ref={searchRef}
+        >
           <div className="global-search-box">
             <Search size={16} className="search-icon" />
             <input
+              ref={mobileSearchInputRef}
               type="text"
               placeholder="Search neighborhood, colonia, or AGEB (e.g. Centro, Caucel)..."
               value={searchQuery}
@@ -155,6 +178,21 @@ export default function App() {
                 <X size={14} />
               </button>
             )}
+            {mobileSearchOpen && (
+              <button
+                type="button"
+                className="mobile-search-close-btn"
+                title="Close search"
+                onClick={() => {
+                  setMobileSearchOpen(false);
+                  setSearchQuery('');
+                  setSearchResults([]);
+                  setSearchOpen(false);
+                }}
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
 
           {/* Search Suggestions Dropdown */}
@@ -175,6 +213,11 @@ export default function App() {
                     onMouseEnter={() => setActiveResult(index)}
                     onMouseDown={(e) => {
                       e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       handleSelectSearchResult(item.cvegeo);
                     }}
                   >
@@ -235,6 +278,19 @@ export default function App() {
             <span className="live-label">PostGIS Sync</span>
           </div>
 
+          {/* Mobile Search Button */}
+          <button
+            type="button"
+            className="mobile-search-btn"
+            title="Search neighborhood or AGEB"
+            onClick={() => {
+              setMobileSearchOpen(true);
+              setSearchOpen(false);
+            }}
+          >
+            <Search size={18} />
+          </button>
+
           {/* Toggle Sidebar Button */}
           <button
             type="button"
@@ -258,6 +314,62 @@ export default function App() {
               if (!sidebarOpen) setSidebarOpen(true);
             }}
           />
+
+          {/* Mobile Floating AGEB Quick Card (when on map and an AGEB is selected) */}
+          {selectedCvegeo && (
+            <div className="mobile-ageb-sheet glass-panel">
+              <div className="mobile-ageb-sheet__header">
+                <div className="mobile-ageb-sheet__badges">
+                  <span className="dossier-tag dossier-tag--active">
+                    Selected AGEB
+                  </span>
+                  {selectedReferenceArea?.type && (
+                    <span className="dossier-tag dossier-tag--type">
+                      {selectedReferenceArea.type}
+                    </span>
+                  )}
+                  {selectedReferenceArea?.postalCode && (
+                    <span className="dossier-tag dossier-tag--cp">
+                      CP {selectedReferenceArea.postalCode}
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="mobile-ageb-sheet__close"
+                  title="Deselect"
+                  onClick={() => setSelectedCvegeo(null)}
+                >
+                  <X size={15} />
+                </button>
+              </div>
+
+              <div className="mobile-ageb-sheet__body">
+                <h3 className="mobile-ageb-sheet__title">
+                  {selectedReferenceArea?.name || 'Urban area without official denomination'}
+                </h3>
+                <div className="mobile-ageb-sheet__cve">
+                  <span>Geostatistical Key:</span>
+                  <strong>{selectedCvegeo}</strong>
+                  {selectedReferenceArea?.coveragePct && (
+                    <span className="coverage-pill">
+                      {selectedReferenceArea.coveragePct}% coverage
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="mobile-ageb-sheet__cta"
+                onClick={() => setMobileTab('analytics')}
+              >
+                <Activity size={15} />
+                <span>View Full Analytics</span>
+                <ChevronRight size={15} />
+              </button>
+            </div>
+          )}
         </main>
 
         {/* Analytics & Insights Sidebar */}
@@ -313,14 +425,25 @@ export default function App() {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    className="selected-dossier__close"
-                    title="Clear selection and reset to citywide view"
-                    onClick={() => setSelectedCvegeo(null)}
-                  >
-                    <X size={16} />
-                  </button>
+                  <div className="selected-dossier__actions">
+                    <button
+                      type="button"
+                      className="mobile-view-map-btn"
+                      title="View on Map"
+                      onClick={() => setMobileTab('map')}
+                    >
+                      <MapPin size={13} />
+                      <span>Map</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="selected-dossier__close"
+                      title="Clear selection and reset to citywide view"
+                      onClick={() => setSelectedCvegeo(null)}
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="city-scope-banner">
@@ -345,12 +468,39 @@ export default function App() {
                 selectedCvegeo={selectedCvegeo}
                 onSelectAgeb={(cvegeo) => {
                   setSelectedCvegeo(cvegeo);
+                  if (typeof window !== 'undefined' && window.innerWidth <= 860) {
+                    setMobileTab('map');
+                  }
                 }}
               />
             </div>
           </aside>
         )}
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="mobile-bottom-nav glass-panel" aria-label="Mobile Navigation">
+        <button
+          type="button"
+          className={`mobile-nav-btn ${mobileTab === 'map' ? 'is-active' : ''}`}
+          onClick={() => setMobileTab('map')}
+        >
+          <MapPinned size={18} />
+          <span>Map</span>
+        </button>
+
+        <button
+          type="button"
+          className={`mobile-nav-btn ${mobileTab === 'analytics' ? 'is-active' : ''}`}
+          onClick={() => setMobileTab('analytics')}
+        >
+          <div className="mobile-nav-icon-wrap">
+            <Activity size={18} />
+            {selectedCvegeo && <span className="mobile-nav-badge-dot" />}
+          </div>
+          <span>Analytics</span>
+        </button>
+      </nav>
     </div>
   );
 }

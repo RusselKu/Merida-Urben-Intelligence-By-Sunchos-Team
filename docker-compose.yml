@@ -1,5 +1,5 @@
 services:
-  # ETL Pipeline Service
+  # 1. ETL Pipeline Service (Official INEGI & SESNSP processing)
   etl-pipeline:
     build:
       context: .
@@ -14,10 +14,10 @@ services:
       - ./sql:/app/sql
     environment:
       - PYTHONUNBUFFERED=1
-      - PYTHONPATH=/app
+      - PYTHONPATH=/app:/app/src/backend
     command: python -m src.etl.run_pipeline
 
-  # FastAPI Backend Service (For testing local API)
+  # 2. FastAPI Backend Service (Spatial Autocorrelation & PySAL Engine)
   backend-api:
     build:
       context: .
@@ -33,5 +33,23 @@ services:
       - ./outputs:/app/outputs
     environment:
       - PYTHONUNBUFFERED=1
-      - PYTHONPATH=/app
+      - PYTHONPATH=/app:/app/src/backend
     command: uvicorn src.backend.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # 3. React + Vite Frontend Dashboard (MapLibre GL JS & Urban Analytics)
+  frontend-ui:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: merida_urban_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src/frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8000
+    command: npm run dev -- --host 0.0.0.0 --port 3000
+    depends_on:
+      - backend-api

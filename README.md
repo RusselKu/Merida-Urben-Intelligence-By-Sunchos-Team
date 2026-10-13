@@ -215,7 +215,22 @@ Execute the SQL scripts in the Supabase SQL Editor:
 1. `sql/01_schema.sql` (Enables PostGIS, dimensions, facts, and GIST indexes).
 2. `sql/03_views.sql` (Creates analytical views for direct KPI queries).
 
-### Step 4: Run the Reproducible ETL Pipeline
+### Step 4: Run the Complete Stack with Docker (ETL, Backend & Frontend)
+To build and run all services (ETL pipeline, FastAPI backend, and React frontend) with a single command:
+```bash
+docker compose up --build
+```
+Or run the Web API and Frontend Dashboard in the background:
+```bash
+docker compose up -d backend-api frontend-ui
+```
+* **Frontend Dashboard:** `http://localhost:3000`
+* **FastAPI Swagger Docs:** `http://localhost:8000/docs`
+* **ETL Pipeline:** Runs reproducible processing of INEGI / SESNSP data.
+
+### Step 5: (Alternative) Running Services Individually
+
+#### ETL Pipeline:
 ```bash
 # Using Python directly:
 python src/etl/run_pipeline.py
@@ -224,17 +239,25 @@ python src/etl/run_pipeline.py
 docker compose up --build etl-pipeline
 ```
 
-### Step 5: Start the FastAPI Backend
+#### FastAPI Backend:
 ```bash
-python src/backend/run.py
+# Using Python directly:
+python src/backend/main.py
+
+# Or using Docker:
+docker compose up backend-api
 ```
 *Interactive API documentation is available at:* `http://localhost:8000/docs`
 
-### Step 6: Start the Frontend Application
+#### Frontend Application:
 ```bash
+# Using Node directly:
 cd src/frontend
 npm install
 npm run dev
+
+# Or using Docker:
+docker compose up frontend-ui
 ```
 *Dashboard will be available at:* `http://localhost:3000`
 

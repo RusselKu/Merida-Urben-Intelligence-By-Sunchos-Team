@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Configure Python environment
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app:/app/src/backend
 ENV PYTHONUNBUFFERED=1
 
 # Install Python dependencies

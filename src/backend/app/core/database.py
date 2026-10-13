@@ -13,10 +13,12 @@ logger = logging.getLogger("merida_backend.database")
 engine = None
 try:
     if settings.DATABASE_URL:
-        # Replace postgresql:// if needed for psycopg2
+        # Explicitly ensure psycopg2 driver is used with SQLAlchemy 2.0+
         db_url = settings.DATABASE_URL
         if db_url.startswith("postgres://"):
-            db_url = db_url.replace("postgres://", "postgresql://", 1)
+            db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif db_url.startswith("postgresql://") and "+psycopg2" not in db_url:
+            db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
         engine = create_engine(
             db_url,
             pool_pre_ping=True,

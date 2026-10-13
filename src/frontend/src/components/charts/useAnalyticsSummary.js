@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 // Data feed produced by notebooks/02_kpi_correlation_analysis.ipynb from the PostGIS warehouse
 // (view v_kpis_territoriales). When the FastAPI backend exposes the same payload, set
@@ -7,6 +7,10 @@ const DEFAULT_URL = '/data/analytics_summary.json';
 
 export default function useAnalyticsSummary(url = import.meta.env.VITE_ANALYTICS_URL || DEFAULT_URL) {
   const [state, setState] = useState({ data: null, loading: true, error: null });
+  const [attempt, setAttempt] = useState(0);
+
+  // Lets the error state offer a retry instead of asking for a page reload
+  const reload = useCallback(() => setAttempt((n) => n + 1), []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -23,7 +27,7 @@ export default function useAnalyticsSummary(url = import.meta.env.VITE_ANALYTICS
       });
 
     return () => controller.abort();
-  }, [url]);
+  }, [url, attempt]);
 
-  return state;
+  return { ...state, reload };
 }

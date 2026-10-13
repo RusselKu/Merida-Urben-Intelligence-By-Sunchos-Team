@@ -5,13 +5,50 @@ import { baseOptions, COLORS, SERIES_PALETTE, fmtInt, fmtCompact } from './chart
 
 const NOT_LOADED = 'The crime layer (fact_crimen) has not been loaded into the warehouse yet.';
 
+const CRIME_CATEGORY_EN = {
+  'Daño a la propiedad': 'Property damage',
+  'Amenazas': 'Threats',
+  'Otros delitos del Fuero Común': 'Other common offences',
+  'Violencia familiar': 'Domestic violence',
+  'Narcomenudeo': 'Drug offenses',
+  'Robo': 'Robbery / Theft',
+  'Fraude': 'Fraud',
+  'Homicidio': 'Homicide',
+  'Lesiones': 'Assault / Battery',
+  'Abuso de confianza': 'Breach of trust',
+  'Despojo': 'Dispossession',
+};
+
+const PERIOD_EN = {
+  'Madrugada': 'Early morning',
+  'Mañana': 'Morning',
+  'Tarde': 'Afternoon',
+  'Noche': 'Night',
+};
+
+const DAY_EN = {
+  'Lunes': 'Mon',
+  'Martes': 'Tue',
+  'Miércoles': 'Wed',
+  'Miercoles': 'Wed',
+  'Jueves': 'Thu',
+  'Viernes': 'Fri',
+  'Sábado': 'Sat',
+  'Sabado': 'Sat',
+  'Domingo': 'Sun',
+};
+
 // KPI "Incidents by Type and Time" — part 1: incidents by crime category.
 export function CrimeByCategoryChart({ summary }) {
   const rows = summary?.crime?.by_category || [];
   const options = baseOptions({
     plotOptions: { bar: { horizontal: true, borderRadius: 3, barHeight: '65%' } },
     colors: [COLORS.pink],
-    xaxis: { categories: rows.map((r) => r.category), tickAmount: 4, labels: { formatter: (v) => fmtCompact(v) } },
+    xaxis: {
+      categories: rows.map((r) => CRIME_CATEGORY_EN[r.category] || r.category),
+      tickAmount: 4,
+      labels: { formatter: (v) => fmtCompact(v) },
+    },
     yaxis: { labels: { maxWidth: 180, style: { colors: COLORS.muted } } },
     tooltip: { theme: 'dark', y: { formatter: (v) => `${fmtInt(v)} incidents` } },
   });
@@ -36,7 +73,13 @@ export function CrimeTimeHeatmap({ summary }) {
   const series = empty
     ? []
     : t.periods
-        .map((p, i) => ({ name: p, data: t.days.map((d, j) => ({ x: d.slice(0, 3), y: t.values[i][j] })) }))
+        .map((p, i) => ({
+          name: PERIOD_EN[p] || p,
+          data: t.days.map((d, j) => ({
+            x: DAY_EN[d] || d.slice(0, 3),
+            y: t.values[i][j],
+          })),
+        }))
         .reverse();
 
   const options = baseOptions({

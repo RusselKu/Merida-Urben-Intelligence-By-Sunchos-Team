@@ -56,59 +56,59 @@ const PALETTES = {
 const KPI_OPTIONS = [
   {
     key: 'densidad_poblacion_km2',
-    label: 'Densidad poblacional',
-    shortLabel: 'Densidad Pop',
-    unit: 'hab / km²',
-    category: 'Demográfico',
+    label: 'Population density',
+    shortLabel: 'Pop Density',
+    unit: 'res / km²',
+    category: 'Demographic',
   },
   {
     key: 'total_negocios',
-    label: 'Total de negocios',
-    shortLabel: 'Negocios',
-    unit: 'establecimientos',
-    category: 'Económico',
+    label: 'Total businesses',
+    shortLabel: 'Businesses',
+    unit: 'establishments',
+    category: 'Economic',
   },
   {
     key: 'poblacion_total',
-    label: 'Población total',
-    shortLabel: 'Población',
-    unit: 'habitantes',
-    category: 'Demográfico',
+    label: 'Total population',
+    shortLabel: 'Population',
+    unit: 'residents',
+    category: 'Demographic',
   },
   {
     key: 'tasa_pea_porcentaje',
-    label: 'Tasa PEA (Económicamente activa)',
-    shortLabel: 'Tasa PEA',
+    label: 'EAP rate (Economically Active)',
+    shortLabel: 'EAP Rate',
     unit: '%',
-    category: 'Laboral',
+    category: 'Labor',
   },
   {
     key: 'densidad_negocios_km2',
-    label: 'Densidad de negocios',
-    shortLabel: 'Densidad Neg.',
+    label: 'Business density',
+    shortLabel: 'Bus. Density',
     unit: 'est / km²',
-    category: 'Económico',
+    category: 'Economic',
   },
   {
     key: 'negocios_por_mil_hab',
-    label: 'Negocios por 1,000 hab.',
-    shortLabel: 'Negocios / 1k',
-    unit: 'por 1k hab',
-    category: 'Económico',
+    label: 'Businesses per 1,000 residents',
+    shortLabel: 'Bus. / 1k',
+    unit: 'per 1k res',
+    category: 'Economic',
   },
   {
     key: 'densidad_comercio_km2',
-    label: 'Densidad de comercio al por menor',
-    shortLabel: 'Comercio',
+    label: 'Retail & trade density',
+    shortLabel: 'Retail',
     unit: 'est / km²',
-    category: 'Sectorial',
+    category: 'Sectoral',
   },
   {
     key: 'densidad_servicios_km2',
-    label: 'Densidad de servicios urbanos',
-    shortLabel: 'Servicios',
+    label: 'Urban service density',
+    shortLabel: 'Services',
     unit: 'est / km²',
-    category: 'Sectorial',
+    category: 'Sectoral',
   },
 ];
 
@@ -119,7 +119,7 @@ const KPI_LOOKUP = Object.fromEntries(
 function formatNumber(value, digits = 2) {
   const number = Number(value);
   if (!Number.isFinite(number)) return 'No data';
-  return new Intl.NumberFormat('es-MX', {
+  return new Intl.NumberFormat('en-US', {
     maximumFractionDigits: digits,
   }).format(number);
 }
@@ -441,8 +441,8 @@ export default function UrbanMap({
         const properties = feature.properties;
         const referenceArea = getAgebReferenceArea(properties.cvegeo);
 
-        const areaName = referenceArea?.name || 'Mérida Territorio';
-        const areaType = referenceArea?.type || 'Zona urbana';
+        const areaName = referenceArea?.name || 'Mérida Territory';
+        const areaType = referenceArea?.type || 'Urban zone';
         const postalCode = referenceArea?.postalCode
           ? `CP ${referenceArea.postalCode}`
           : '';
@@ -470,18 +470,18 @@ export default function UrbanMap({
 
               <div class="hud-tooltip__grid">
                 <div class="hud-tooltip__stat">
-                  <span>Población</span>
+                  <span>Population</span>
                   <strong>${formatNumber(properties.poblacion_total, 0)}</strong>
                 </div>
                 <div class="hud-tooltip__stat">
-                  <span>Negocios</span>
+                  <span>Businesses</span>
                   <strong>${formatNumber(properties.total_negocios, 0)}</strong>
                 </div>
               </div>
 
               <div class="hud-tooltip__action">
                 <span class="hud-tooltip__dot"></span>
-                <span>Clic para enfocar en analíticas</span>
+                <span>Click to inspect in Analytics</span>
               </div>
             </div>
           `)
@@ -668,12 +668,12 @@ export default function UrbanMap({
         >
           <div className="urban-map__hud-title">
             <Sliders size={16} className="text-cyan" />
-            <span>Capas & Métricas</span>
+            <span>Layers & Metrics</span>
           </div>
           <button
             type="button"
             className="hud-toggle-btn"
-            title={controlsExpanded ? 'Colapsar controles' : 'Expandir controles'}
+            title={controlsExpanded ? 'Collapse controls' : 'Expand controls'}
           >
             {controlsExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
           </button>
@@ -702,7 +702,7 @@ export default function UrbanMap({
             {/* Metric Select Dropdown */}
             <label className="hud-field">
               <span className="hud-field-label">
-                Métrica Coroplética
+                Choropleth KPI
               </span>
               <div className="hud-select-wrap">
                 <select
@@ -724,10 +724,10 @@ export default function UrbanMap({
                 type="button"
                 className={`hud-mode-btn ${is3D ? 'is-active' : ''}`}
                 onClick={() => setIs3D(!is3D)}
-                title="Alternar vista isométrica 3D de alturas"
+                title="Toggle 3D isometric height extrusion"
               >
                 <Box size={14} />
-                <span>{is3D ? 'Modo 3D Alturas' : 'Modo 2D Plano'}</span>
+                <span>{is3D ? '3D Height Mode' : '2D Flat Mode'}</span>
               </button>
 
               <div className="hud-palette-selector">
@@ -737,7 +737,7 @@ export default function UrbanMap({
                     type="button"
                     className={`hud-palette-dot ${paletteKey === pal.id ? 'is-selected' : ''}`}
                     style={{ backgroundColor: pal.accent }}
-                    title={`Paleta: ${pal.name}`}
+                    title={`Palette: ${pal.name}`}
                     onClick={() => setPaletteKey(pal.id)}
                   />
                 ))}
@@ -747,7 +747,7 @@ export default function UrbanMap({
             {/* Opacity Slider */}
             <div className="hud-field hud-field--slider">
               <div className="hud-slider-header">
-                <span>Opacidad de Polígonos</span>
+                <span>Polygon Opacity</span>
                 <span className="hud-slider-val">{Math.round(opacity * 100)}%</span>
               </div>
               <input
@@ -766,8 +766,8 @@ export default function UrbanMap({
               <span className="live-beacon" />
               <span>
                 {geojson
-                  ? `${geojson.features.length} AGEBs urbanos renderizados`
-                  : 'Cargando cartografía geoespacial…'}
+                  ? `${geojson.features.length} urban AGEBs rendered`
+                  : 'Loading geospatial cartography…'}
               </span>
             </div>
           </div>
@@ -779,7 +779,7 @@ export default function UrbanMap({
         <button
           type="button"
           onClick={() => handleZoom(1)}
-          title="Acercar mapa"
+          title="Zoom in"
           className="toolbar-btn"
         >
           <Plus size={16} />
@@ -787,7 +787,7 @@ export default function UrbanMap({
         <button
           type="button"
           onClick={() => handleZoom(-1)}
-          title="Alejar mapa"
+          title="Zoom out"
           className="toolbar-btn"
         >
           <Minus size={16} />
@@ -796,7 +796,7 @@ export default function UrbanMap({
         <button
           type="button"
           onClick={() => setIs3D(!is3D)}
-          title={is3D ? 'Cambiar a 2D' : 'Ver 3D Isométrico'}
+          title={is3D ? 'Switch to 2D' : 'View 3D Isometric'}
           className={`toolbar-btn ${is3D ? 'is-active' : ''}`}
         >
           <Box size={16} />
@@ -804,7 +804,7 @@ export default function UrbanMap({
         <button
           type="button"
           onClick={handleResetCamera}
-          title="Restablecer vista a Mérida"
+          title="Reset view to Mérida"
           className="toolbar-btn"
         >
           <RotateCcw size={15} />
@@ -840,7 +840,7 @@ export default function UrbanMap({
 
       {error && (
         <div className="urban-map__error glass-panel">
-          Error al cargar datos geoespaciales: {error.message}
+          Failed to load geospatial data: {error.message}
         </div>
       )}
     </div>

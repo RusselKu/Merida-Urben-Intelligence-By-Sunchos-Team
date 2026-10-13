@@ -6,17 +6,17 @@ const GROUP_CONFIG = {
   Demographic: {
     color: 'cyan',
     icon: Users,
-    label: 'Demográfico',
+    label: 'Demographic',
   },
   Economic: {
     color: 'emerald',
     icon: Building2,
-    label: 'Económico',
+    label: 'Economic',
   },
   'Public safety': {
     color: 'rose',
     icon: ShieldAlert,
-    label: 'Seguridad',
+    label: 'Public Safety',
   },
 };
 
@@ -42,43 +42,43 @@ export default function KpiSummaryCards({ summary, ageb = null }) {
   const tiles = [
     {
       key: 'poblacion_total',
-      label: 'Población total',
+      label: 'Total population',
       value: fmtInt(c.poblacion_total),
-      unit: 'habitantes',
+      unit: 'residents',
       group: 'Demographic',
       rawLocal: c.poblacion_total,
       rawCity: city.poblacion_total,
     },
     {
       key: 'densidad_poblacion_km2',
-      label: 'Densidad poblacional',
+      label: 'Population density',
       value: fmtInt(c.densidad_poblacion_km2),
-      unit: 'hab / km²',
+      unit: 'res / km²',
       group: 'Demographic',
       rawLocal: c.densidad_poblacion_km2,
       rawCity: city.densidad_poblacion_km2,
     },
     {
       key: 'tasa_pea_porcentaje',
-      label: 'Tasa PEA (12+)',
+      label: 'EAP rate (12+)',
       value: fmtDec(c.tasa_pea_porcentaje),
-      unit: '% activa',
+      unit: '% active',
       group: 'Demographic',
       rawLocal: c.tasa_pea_porcentaje,
       rawCity: city.tasa_pea_porcentaje,
     },
     {
       key: 'total_negocios',
-      label: 'Negocios totales',
+      label: 'Total businesses',
       value: businessLoaded ? fmtInt(c.total_negocios) : '—',
-      unit: 'establecimientos',
+      unit: 'establishments',
       group: 'Economic',
       rawLocal: c.total_negocios,
       rawCity: city.total_negocios,
     },
     {
       key: 'densidad_negocios_km2',
-      label: 'Densidad de negocios',
+      label: 'Business density',
       value: businessLoaded ? fmtInt(c.densidad_negocios_km2) : '—',
       unit: 'est / km²',
       group: 'Economic',
@@ -87,36 +87,36 @@ export default function KpiSummaryCards({ summary, ageb = null }) {
     },
     {
       key: 'negocios_por_mil_hab',
-      label: 'Negocios / 1k hab.',
+      label: 'Businesses / 1k res.',
       value: businessLoaded ? fmtDec(c.negocios_por_mil_hab) : '—',
-      unit: 'por 1,000 hab',
+      unit: 'per 1k residents',
       group: 'Economic',
       rawLocal: c.negocios_por_mil_hab,
       rawCity: city.negocios_por_mil_hab,
     },
     {
       key: 'total_delitos',
-      label: 'Incidentes delictivos',
+      label: 'Crime incidents',
       value: crimeLoaded ? fmtInt(c.total_delitos) : '—',
-      unit: 'georreferenciados',
+      unit: 'georeferenced',
       group: 'Public safety',
       rawLocal: c.total_delitos,
       rawCity: city.total_delitos,
     },
     {
       key: 'tasa_delictiva_por_mil_hab',
-      label: 'Tasa delictiva / 1k',
+      label: 'Crime rate / 1k',
       value: crimeLoaded ? fmtDec(c.tasa_delictiva_por_mil_hab) : '—',
-      unit: 'por 1,000 hab',
+      unit: 'per 1k residents',
       group: 'Public safety',
       rawLocal: c.tasa_delictiva_por_mil_hab,
       rawCity: city.tasa_delictiva_por_mil_hab,
     },
     {
       key: 'delitos_por_100_negocios',
-      label: 'Delitos / 100 negocios',
+      label: 'Crime / 100 businesses',
       value: crimeLoaded ? fmtDec(c.delitos_por_100_negocios) : '—',
-      unit: 'por 100 est.',
+      unit: 'per 100 est.',
       group: 'Public safety',
       rawLocal: c.delitos_por_100_negocios,
       rawCity: city.delitos_por_100_negocios,
@@ -140,9 +140,9 @@ export default function KpiSummaryCards({ summary, ageb = null }) {
                   className={`kpi-delta-pill ${
                     delta.isPositive ? 'kpi-delta--pos' : 'kpi-delta--neg'
                   }`}
-                  title="Comparativa relativa contra el promedio metropolitano de Mérida"
+                  title="Relative benchmark vs Mérida metropolitan average"
                 >
-                  {delta.isPositive ? `+${delta.pct}%` : `${delta.pct}%`} vs ciudad
+                  {delta.isPositive ? `+${delta.pct}%` : `${delta.pct}%`} vs city
                 </span>
               )}
             </div>

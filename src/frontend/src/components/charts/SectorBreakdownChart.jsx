@@ -3,6 +3,13 @@ import Chart from 'react-apexcharts';
 import ChartCard, { Toggle } from './ChartCard';
 import { baseOptions, MACRO_COLORS, COLORS, fmtInt, fmtCompact } from './chartTheme';
 
+const MACRO_LABELS = {
+  Comercio: 'Commerce / Retail',
+  Servicios: 'Services',
+  Industria: 'Industry',
+  Otro: 'Other',
+};
+
 // Economic structure: establishments by SCIAN sector (top N) or by macro-category
 // (Comercio / Servicios / Industria / Otro, the basis of retail and service density).
 export default function SectorBreakdownChart({ summary, topN = 10 }) {
@@ -16,7 +23,7 @@ export default function SectorBreakdownChart({ summary, topN = 10 }) {
     plotOptions: { bar: { horizontal: true, borderRadius: 3, barHeight: '70%', distributed: true } },
     colors: rows.map((r) => MACRO_COLORS[mode === 'sector' ? r.macro : r.name] || COLORS.slate),
     xaxis: {
-      categories: rows.map((r) => (mode === 'sector' ? `${r.name} (${r.code})` : r.name)),
+      categories: rows.map((r) => (mode === 'sector' ? `${r.name} (${r.code})` : (MACRO_LABELS[r.name] || r.name))),
       tickAmount: 4,
       labels: { formatter: (v) => fmtCompact(v) },
     },
@@ -60,7 +67,7 @@ export default function SectorBreakdownChart({ summary, topN = 10 }) {
           {Object.entries(MACRO_COLORS).map(([name, color]) => (
             <span key={name}>
               <i style={{ background: color }} />
-              {name}
+              {MACRO_LABELS[name] || name}
             </span>
           ))}
         </div>

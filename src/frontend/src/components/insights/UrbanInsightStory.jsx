@@ -386,20 +386,23 @@ export default function UrbanInsightStory({
   }
 
   return (
-    <section className="urban-story">
+    <section className="urban-story glass-panel">
       <header className="urban-story__header">
-        <span>
-          {ageb
-            ? 'What stands out here'
-            : 'What stands out in Mérida'}
-        </span>
+        <div className="urban-story__title-row">
+          <div className="urban-story__ai-tag">
+            <span className="live-beacon" />
+            <span>AI Executive Briefing</span>
+          </div>
+          <span className="urban-story__scope-tag">
+            {ageb ? 'Análisis Local' : 'Visión Metrópoli'}
+          </span>
+        </div>
 
-        <h2>
+        <h3 className="urban-story__heading">
           {ageb
-            ? referenceArea?.name ||
-              `AGEB ${ageb.cvegeo}`
-            : 'Urban story'}
-        </h2>
+            ? `Diagnóstico: ${referenceArea?.name || `AGEB ${ageb.cvegeo}`}`
+            : 'Hallazgos Clave de Mérida'}
+        </h3>
       </header>
 
       <div className="urban-story__items">
@@ -408,15 +411,17 @@ export default function UrbanInsightStory({
             className="urban-story__item"
             key={`${insight.title}-${index}`}
           >
-            <span className="urban-story__eyebrow">
-              {insight.eyebrow}
-            </span>
+            <div className="urban-story__item-header">
+              <span className="urban-story__eyebrow">
+                {insight.eyebrow}
+              </span>
+            </div>
 
-            <strong>
+            <strong className="urban-story__item-title">
               {insight.title}
             </strong>
 
-            <p>
+            <p className="urban-story__item-text">
               {insight.text}
             </p>
           </article>
@@ -425,3 +430,4 @@ export default function UrbanInsightStory({
     </section>
   );
 }
+

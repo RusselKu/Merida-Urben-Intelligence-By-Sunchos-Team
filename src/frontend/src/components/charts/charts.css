@@ -1,4 +1,6 @@
-/* Analytics panel & ApexCharts components — uses the variables from src/index.css */
+/* ==========================================================
+   ANALYTICS PANEL & APEXCHARTS DESIGN SYSTEM
+   ========================================================== */
 
 .analytics-panel {
   display: flex;
@@ -8,65 +10,240 @@
 }
 
 .analytics-panel--status {
-  padding: 16px;
-  font-size: 0.85rem;
+  padding: 24px 16px;
+  font-size: 0.82rem;
   color: var(--text-secondary);
-  border: 1px dashed var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
 }
 
+.loading-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(6, 182, 212, 0.2);
+  border-top-color: var(--accent-cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.analytics-panel--error {
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(127, 29, 29, 0.2);
+}
+
+/* ==========================================================
+   ANALYTICS TABS
+   ========================================================== */
 .analytics-tabs {
   display: flex;
   gap: 4px;
   padding: 4px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border-color);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
 }
 
-.analytics-tabs button,
-.chart-toggle button {
+.analytics-tab-btn {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   background: transparent;
   border: 0;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 600;
-  padding: 7px 8px;
-  border-radius: 7px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
-.analytics-tabs button:hover,
-.chart-toggle button:hover {
-  color: var(--text-primary);
+.analytics-tab-btn:hover {
+  color: var(--text-bright);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.analytics-tabs button.is-active,
-.chart-toggle button.is-active {
-  background: rgba(6, 182, 212, 0.15);
-  color: #67e8f9;
+.analytics-tab-btn.is-active {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(99, 102, 241, 0.2));
+  color: var(--accent-cyan-light);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  box-shadow: 0 0 12px -2px rgba(6, 182, 212, 0.3);
 }
 
-.analytics-context {
-  font-size: 0.78rem;
-  color: #67e8f9;
+.tab-icon {
+  flex-shrink: 0;
 }
 
-.analytics-footer {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  opacity: 0.8;
+/* Tab Content Fade */
+.tab-pane-fade {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: paneFadeIn 0.25s ease-out;
 }
 
-/* ---- Chart card ---- */
-.chart-card {
-  background: rgba(255, 255, 255, 0.03);
+@keyframes paneFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.analytics-context-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(6, 182, 212, 0.08);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  border-radius: var(--radius-md);
+  font-size: 0.72rem;
+  color: #cbd5e1;
+}
+
+.analytics-context-badge strong {
+  color: var(--accent-cyan-light);
+}
+
+/* ==========================================================
+   KPI TILES & GRID
+   ========================================================== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.kpi-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 14px 14px 8px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: all var(--transition-fast);
+}
+
+.kpi-tile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-cyan);
+  opacity: 0.7;
+}
+
+.kpi-tile--emerald::before {
+  background: var(--accent-emerald);
+}
+
+.kpi-tile--rose::before {
+  background: var(--accent-rose);
+}
+
+.kpi-tile:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.kpi-tile__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.kpi-tile__group {
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-cyan-light);
+}
+
+.kpi-tile__group--emerald {
+  color: var(--accent-emerald);
+}
+
+.kpi-tile__group--rose {
+  color: #fb7185;
+}
+
+.kpi-delta-pill {
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+}
+
+.kpi-delta--pos {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.kpi-delta--neg {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.kpi-tile__value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-bright);
+  line-height: 1.15;
+  margin: 3px 0 1px;
+}
+
+.kpi-tile__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.kpi-tile__unit {
+  font-size: 0.64rem;
+  color: var(--text-muted);
+}
+
+/* ==========================================================
+   CHART CARD
+   ========================================================== */
+.chart-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px 16px 10px;
+  box-shadow: var(--shadow-sm);
 }
 
 .chart-card__header {
@@ -74,26 +251,27 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .chart-card__title {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.98rem;
-  font-weight: 600;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--text-bright);
 }
 
 .chart-card__subtitle {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
   margin-top: 2px;
 }
 
 .chart-card__empty {
-  padding: 28px 12px;
+  padding: 32px 14px;
   text-align: center;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
 .chart-toggle {
@@ -101,32 +279,55 @@
   gap: 2px;
   padding: 2px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
 }
 
 .chart-toggle button {
   padding: 4px 10px;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.chart-toggle button:hover {
+  color: var(--text-bright);
+}
+
+.chart-toggle button.is-active {
+  background: rgba(6, 182, 212, 0.18);
+  color: var(--accent-cyan-light);
+  border: 1px solid rgba(6, 182, 212, 0.3);
 }
 
 .chart-select {
   max-width: 220px;
-  background: var(--bg-secondary);
+  background: var(--bg-surface);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 5px 8px;
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
   font: inherit;
   font-size: 0.74rem;
+  outline: none;
+}
+
+.chart-select:focus {
+  border-color: var(--accent-cyan);
 }
 
 .chart-legend {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--text-secondary);
-  padding: 0 4px 8px;
+  padding: 4px 4px 8px;
 }
 
 .chart-legend i {
@@ -138,89 +339,77 @@
 }
 
 .chart-note {
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  padding: 0 4px 8px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  padding: 4px;
+  line-height: 1.4;
 }
 
 .stat-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
   align-items: center;
-  padding: 4px 4px 6px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
 }
 
 .stat-row span {
   display: block;
-  font-size: 0.68rem;
-  color: var(--text-secondary);
+  font-size: 0.64rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .stat-row b {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.05rem;
+  font-size: 0.96rem;
   font-variant-numeric: tabular-nums;
+  color: var(--text-bright);
 }
 
 .badge {
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: rgba(156, 163, 175, 0.15);
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(148, 163, 184, 0.15);
   color: var(--text-secondary);
   text-transform: capitalize;
 }
 
 .badge--ok {
-  background: rgba(52, 211, 153, 0.15);
+  background: rgba(16, 185, 129, 0.15);
   color: #6ee7b7;
-}
-
-/* ---- KPI tiles ---- */
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
-}
-
-.kpi-tile {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-}
-
-.kpi-tile__group {
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--accent-cyan);
-}
-
-.kpi-tile__value {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.35rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.kpi-tile__label {
-  font-size: 0.76rem;
-}
-
-.kpi-tile__unit {
-  font-size: 0.68rem;
-  color: var(--text-secondary);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 /* ApexCharts custom tooltip */
 .apex-tip {
-  padding: 8px 10px;
-  font-size: 0.75rem;
+  padding: 10px 12px;
+  font-size: 0.74rem;
   line-height: 1.45;
+  background: rgba(9, 14, 26, 0.95);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Footer */
+.analytics-footer {
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
 }

@@ -1,6 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import {
+  Layers,
+  Box,
+  RotateCcw,
+  Palette,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  TrendingUp,
+  Sliders,
+  Sparkles,
+  Plus,
+  Minus,
+} from 'lucide-react';
 import { getAgebReferenceArea } from '../../data/agebReferenceAreas';
 import './UrbanMap.css';
 
@@ -12,54 +26,89 @@ const ANALYTICS_URL =
   import.meta.env.VITE_ANALYTICS_URL ||
   '/data/analytics_summary.json';
 
-const COLORS = [
-  '#164e63',
-  '#0891b2',
-  '#22d3ee',
-  '#818cf8',
-  '#c084fc',
-];
+const PALETTES = {
+  cyan: {
+    id: 'cyan',
+    name: 'Cyber Cyan',
+    colors: ['#082f49', '#0284c7', '#06b6d4', '#818cf8', '#c084fc'],
+    accent: '#06b6d4',
+  },
+  solar: {
+    id: 'solar',
+    name: 'Solar Flare',
+    colors: ['#1c1917', '#991b1b', '#ea580c', '#f59e0b', '#fde047'],
+    accent: '#f59e0b',
+  },
+  emerald: {
+    id: 'emerald',
+    name: 'Emerald Eco',
+    colors: ['#022c22', '#065f46', '#059669', '#10b981', '#6ee7b7'],
+    accent: '#10b981',
+  },
+  violet: {
+    id: 'violet',
+    name: 'Neon Violet',
+    colors: ['#1e1b4b', '#4338ca', '#7c3aed', '#a855f7', '#f472b6'],
+    accent: '#a855f7',
+  },
+};
 
 const KPI_OPTIONS = [
   {
-    key: 'poblacion_total',
-    label: 'Total population',
-    unit: 'residents',
-  },
-  {
     key: 'densidad_poblacion_km2',
-    label: 'Population density',
-    unit: 'res / km²',
-  },
-  {
-    key: 'tasa_pea_porcentaje',
-    label: 'EAP rate',
-    unit: '%',
+    label: 'Densidad poblacional',
+    shortLabel: 'Densidad Pop',
+    unit: 'hab / km²',
+    category: 'Demográfico',
   },
   {
     key: 'total_negocios',
-    label: 'Total businesses',
-    unit: 'establishments',
+    label: 'Total de negocios',
+    shortLabel: 'Negocios',
+    unit: 'establecimientos',
+    category: 'Económico',
+  },
+  {
+    key: 'poblacion_total',
+    label: 'Población total',
+    shortLabel: 'Población',
+    unit: 'habitantes',
+    category: 'Demográfico',
+  },
+  {
+    key: 'tasa_pea_porcentaje',
+    label: 'Tasa PEA (Económicamente activa)',
+    shortLabel: 'Tasa PEA',
+    unit: '%',
+    category: 'Laboral',
   },
   {
     key: 'densidad_negocios_km2',
-    label: 'Business density',
+    label: 'Densidad de negocios',
+    shortLabel: 'Densidad Neg.',
     unit: 'est / km²',
+    category: 'Económico',
   },
   {
     key: 'negocios_por_mil_hab',
-    label: 'Businesses per 1,000 residents',
-    unit: 'per 1k',
+    label: 'Negocios por 1,000 hab.',
+    shortLabel: 'Negocios / 1k',
+    unit: 'por 1k hab',
+    category: 'Económico',
   },
   {
     key: 'densidad_comercio_km2',
-    label: 'Retail / trade density',
+    label: 'Densidad de comercio al por menor',
+    shortLabel: 'Comercio',
     unit: 'est / km²',
+    category: 'Sectorial',
   },
   {
     key: 'densidad_servicios_km2',
-    label: 'Service density',
+    label: 'Densidad de servicios urbanos',
+    shortLabel: 'Servicios',
     unit: 'est / km²',
+    category: 'Sectorial',
   },
 ];
 
@@ -67,31 +116,27 @@ const KPI_LOOKUP = Object.fromEntries(
   KPI_OPTIONS.map((option) => [option.key, option]),
 );
 
-function formatNumber(value) {
+function formatNumber(value, digits = 2) {
   const number = Number(value);
-
   if (!Number.isFinite(number)) return 'No data';
-
-  return new Intl.NumberFormat('en-US', {
-    maximumFractionDigits: 2,
+  return new Intl.NumberFormat('es-MX', {
+    maximumFractionDigits: digits,
   }).format(number);
 }
 
 function percentile(sorted, p) {
   if (!sorted.length) return 0;
-
   const index = (sorted.length - 1) * p;
   const lower = Math.floor(index);
   const upper = Math.ceil(index);
 
   if (lower === upper) return sorted[lower];
-
   const weight = index - lower;
-
   return sorted[lower] * (1 - weight) + sorted[upper] * weight;
 }
 
-function buildScale(geojson, metric) {
+function buildScale(geojson, metric, paletteKey = 'cyan') {
+  const colors = PALETTES[paletteKey]?.colors || PALETTES.cyan.colors;
   const values = geojson.features
     .map((feature) => Number(feature.properties?.[metric]))
     .filter(Number.isFinite)
@@ -99,23 +144,20 @@ function buildScale(geojson, metric) {
 
   if (!values.length) {
     return [
-      { value: 0, color: COLORS[0] },
-      { value: 1, color: COLORS[COLORS.length - 1] },
+      { value: 0, color: colors[0] },
+      { value: 1, color: colors[colors.length - 1] },
     ];
   }
 
   const percentiles = [0, 0.25, 0.5, 0.75, 1];
-
   const rawStops = percentiles.map((p, index) => ({
     value: percentile(values, p),
-    color: COLORS[index],
+    color: colors[index],
   }));
 
   const uniqueStops = [];
-
   rawStops.forEach((stop) => {
     const previous = uniqueStops[uniqueStops.length - 1];
-
     if (!previous || stop.value > previous.value) {
       uniqueStops.push(stop);
     }
@@ -124,7 +166,7 @@ function buildScale(geojson, metric) {
   if (uniqueStops.length === 1) {
     uniqueStops.push({
       value: uniqueStops[0].value + 1,
-      color: COLORS[COLORS.length - 1],
+      color: colors[colors.length - 1],
     });
   }
 
@@ -140,9 +182,21 @@ function colorExpression(metric, scale) {
   ];
 }
 
+function extrusionHeightExpression(metric, maxVal) {
+  const safeMax = maxVal > 0 ? maxVal : 100;
+  return [
+    'interpolate',
+    ['linear'],
+    ['to-number', ['get', metric], 0],
+    0,
+    40,
+    safeMax,
+    2600,
+  ];
+}
+
 function geometryBounds(geometry) {
   const bounds = new maplibregl.LngLatBounds();
-
   const addCoordinates = (coordinates) => {
     if (
       Array.isArray(coordinates) &&
@@ -153,12 +207,9 @@ function geometryBounds(geometry) {
       bounds.extend(coordinates);
       return;
     }
-
     coordinates.forEach(addCoordinates);
   };
-
   addCoordinates(geometry.coordinates);
-
   return bounds;
 }
 
@@ -173,14 +224,24 @@ export default function UrbanMap({
   const selectedMetricRef = useRef('densidad_poblacion_km2');
 
   const [geojson, setGeojson] = useState(null);
-  const [selectedMetric, setSelectedMetric] = useState(
-    'densidad_poblacion_km2',
-  );
-  const [opacity, setOpacity] = useState(0.72);
+  const [selectedMetric, setSelectedMetric] = useState('densidad_poblacion_km2');
+  const [opacity, setOpacity] = useState(0.78);
+  const [is3D, setIs3D] = useState(false);
+  const [paletteKey, setPaletteKey] = useState('cyan');
+  const [controlsExpanded, setControlsExpanded] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [error, setError] = useState(null);
 
   selectedMetricRef.current = selectedMetric;
+
+  // Max value of selected metric for 3D extrusion scale
+  const maxMetricValue = useMemo(() => {
+    if (!geojson) return 100;
+    const values = geojson.features
+      .map((f) => Number(f.properties?.[selectedMetric]))
+      .filter(Number.isFinite);
+    return values.length ? Math.max(...values) : 100;
+  }, [geojson, selectedMetric]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -193,15 +254,10 @@ export default function UrbanMap({
         ]);
 
         if (!geoResponse.ok) {
-          throw new Error(
-            `GeoJSON request failed with HTTP ${geoResponse.status}`,
-          );
+          throw new Error(`GeoJSON request failed: HTTP ${geoResponse.status}`);
         }
-
         if (!analyticsResponse.ok) {
-          throw new Error(
-            `Analytics request failed with HTTP ${analyticsResponse.status}`,
-          );
+          throw new Error(`Analytics request failed: HTTP ${analyticsResponse.status}`);
         }
 
         const [geometryData, analyticsData] = await Promise.all([
@@ -221,7 +277,6 @@ export default function UrbanMap({
           features: geometryData.features.map((feature) => {
             const cvegeo = String(feature.properties?.cvegeo || '');
             const metrics = analyticsByCvegeo.get(cvegeo) || {};
-
             return {
               ...feature,
               properties: {
@@ -242,43 +297,41 @@ export default function UrbanMap({
     }
 
     loadData();
-
     return () => controller.abort();
   }, []);
 
   const scale = useMemo(() => {
     if (!geojson) return [];
-    return buildScale(geojson, selectedMetric);
-  }, [geojson, selectedMetric]);
+    return buildScale(geojson, selectedMetric, paletteKey);
+  }, [geojson, selectedMetric, paletteKey]);
 
+  // Initialize Map
   useEffect(() => {
     if (!geojson || map.current) return;
 
     const initialScale = buildScale(
       geojson,
       selectedMetricRef.current,
+      paletteKey,
     );
 
     const instance = new maplibregl.Map({
       container: mapContainer.current,
-      style:
-        'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
       center: [-89.6237, 20.9674],
-      zoom: 11,
-      pitch: 15,
+      zoom: 11.2,
+      pitch: 0,
+      bearing: 0,
+      attributionControl: false,
     });
 
     map.current = instance;
 
-    instance.addControl(
-      new maplibregl.NavigationControl(),
-      'top-right',
-    );
-
     popup.current = new maplibregl.Popup({
       closeButton: false,
       closeOnClick: false,
-      offset: 12,
+      offset: 14,
+      className: 'custom-map-popup',
     });
 
     instance.on('load', () => {
@@ -288,10 +341,14 @@ export default function UrbanMap({
         promoteId: 'cvegeo',
       });
 
+      // 2D Fill Layer
       instance.addLayer({
         id: 'ageb-fill',
         type: 'fill',
         source: 'merida-agebs',
+        layout: {
+          visibility: 'visible',
+        },
         paint: {
           'fill-color': colorExpression(
             selectedMetricRef.current,
@@ -300,22 +357,46 @@ export default function UrbanMap({
           'fill-opacity': [
             'case',
             ['boolean', ['feature-state', 'hover'], false],
-            0.95,
+            0.96,
             opacity,
           ],
         },
       });
 
+      // 3D Extrusion Layer
+      instance.addLayer({
+        id: 'ageb-extrusion',
+        type: 'fill-extrusion',
+        source: 'merida-agebs',
+        layout: {
+          visibility: 'none',
+        },
+        paint: {
+          'fill-extrusion-color': colorExpression(
+            selectedMetricRef.current,
+            initialScale,
+          ),
+          'fill-extrusion-height': extrusionHeightExpression(
+            selectedMetricRef.current,
+            maxMetricValue,
+          ),
+          'fill-extrusion-base': 0,
+          'fill-extrusion-opacity': opacity,
+        },
+      });
+
+      // Outline Layer
       instance.addLayer({
         id: 'ageb-outline',
         type: 'line',
         source: 'merida-agebs',
         paint: {
-          'line-color': 'rgba(226, 232, 240, 0.55)',
-          'line-width': 0.6,
+          'line-color': 'rgba(148, 163, 184, 0.45)',
+          'line-width': 0.7,
         },
       });
 
+      // Selected AGEB Outline Layer
       instance.addLayer({
         id: 'ageb-selected',
         type: 'line',
@@ -326,14 +407,15 @@ export default function UrbanMap({
           selectedCvegeo || '__none__',
         ],
         paint: {
-          'line-color': '#ffffff',
-          'line-width': 3,
+          'line-color': '#38bdf8',
+          'line-width': 3.5,
+          'line-blur': 0.5,
         },
       });
 
-      instance.on('mousemove', 'ageb-fill', (event) => {
+      // Hover handler
+      const handleMouseMove = (event) => {
         const feature = event.features?.[0];
-
         if (!feature) return;
 
         instance.getCanvas().style.cursor = 'pointer';
@@ -343,106 +425,93 @@ export default function UrbanMap({
           hoveredFeature.current !== feature.id
         ) {
           instance.setFeatureState(
-            {
-              source: 'merida-agebs',
-              id: hoveredFeature.current,
-            },
+            { source: 'merida-agebs', id: hoveredFeature.current },
             { hover: false },
           );
         }
 
         hoveredFeature.current = feature.id;
-
         instance.setFeatureState(
-          {
-            source: 'merida-agebs',
-            id: feature.id,
-          },
+          { source: 'merida-agebs', id: feature.id },
           { hover: true },
         );
 
         const metric = selectedMetricRef.current;
-        const metricConfig = KPI_LOOKUP[metric];
+        const metricConfig = KPI_LOOKUP[metric] || KPI_OPTIONS[0];
         const properties = feature.properties;
+        const referenceArea = getAgebReferenceArea(properties.cvegeo);
 
-        const referenceArea =
-          getAgebReferenceArea(properties.cvegeo);
-
-        const areaName =
-          referenceArea?.name || 'Not available';
-
-        const areaType =
-          referenceArea?.type
-            ? ` · ${referenceArea.type}`
-            : '';
-
-        const postalCode =
-          referenceArea?.postalCode
-            ? ` · CP ${referenceArea.postalCode}`
-            : '';
+        const areaName = referenceArea?.name || 'Mérida Territorio';
+        const areaType = referenceArea?.type || 'Zona urbana';
+        const postalCode = referenceArea?.postalCode
+          ? `CP ${referenceArea.postalCode}`
+          : '';
 
         popup.current
           .setLngLat(event.lngLat)
           .setHTML(`
-            <div class="map-popup">
-              <strong>${areaName}</strong>
+            <div class="hud-tooltip">
+              <div class="hud-tooltip__header">
+                <div class="hud-tooltip__badge-row">
+                  <span class="hud-badge hud-badge--type">${areaType}</span>
+                  ${postalCode ? `<span class="hud-badge hud-badge--cp">${postalCode}</span>` : ''}
+                  <span class="hud-badge hud-badge--cve">AGEB ${properties.cvegeo}</span>
+                </div>
+                <strong class="hud-tooltip__title">${areaName}</strong>
+              </div>
 
-              <span>
-                AGEB ${properties.cvegeo}
-              </span>
+              <div class="hud-tooltip__highlight">
+                <span class="hud-tooltip__metric-label">${metricConfig.label}</span>
+                <div class="hud-tooltip__metric-val">
+                  <span>${formatNumber(properties[metric])}</span>
+                  <small>${metricConfig.unit}</small>
+                </div>
+              </div>
 
-              ${
-                referenceArea
-                  ? `<span>${areaType.replace(' · ', '')}${postalCode}</span>`
-                  : ''
-              }
+              <div class="hud-tooltip__grid">
+                <div class="hud-tooltip__stat">
+                  <span>Población</span>
+                  <strong>${formatNumber(properties.poblacion_total, 0)}</strong>
+                </div>
+                <div class="hud-tooltip__stat">
+                  <span>Negocios</span>
+                  <strong>${formatNumber(properties.total_negocios, 0)}</strong>
+                </div>
+              </div>
 
-              <span>
-                ${metricConfig.label}:
-                <b>${formatNumber(properties[metric])}</b>
-                ${metricConfig.unit}
-              </span>
-
-              <span>
-                Population:
-                <b>${formatNumber(properties.poblacion_total)}</b>
-              </span>
-
-              <span>
-                Businesses:
-                <b>${formatNumber(properties.total_negocios)}</b>
-              </span>
-
-              <small>Click to inspect this AGEB</small>
+              <div class="hud-tooltip__action">
+                <span class="hud-tooltip__dot"></span>
+                <span>Clic para enfocar en analíticas</span>
+              </div>
             </div>
           `)
           .addTo(instance);
-      });
+      };
 
-      instance.on('mouseleave', 'ageb-fill', () => {
+      const handleMouseLeave = () => {
         instance.getCanvas().style.cursor = '';
-
         if (hoveredFeature.current !== null) {
           instance.setFeatureState(
-            {
-              source: 'merida-agebs',
-              id: hoveredFeature.current,
-            },
+            { source: 'merida-agebs', id: hoveredFeature.current },
             { hover: false },
           );
         }
-
         hoveredFeature.current = null;
         popup.current?.remove();
-      });
+      };
 
-      instance.on('click', 'ageb-fill', (event) => {
-        const cvegeo =
-          event.features?.[0]?.properties?.cvegeo;
-
+      const handleClick = (event) => {
+        const cvegeo = event.features?.[0]?.properties?.cvegeo;
         if (cvegeo) {
           onSelectAgeb?.(String(cvegeo));
         }
+      };
+
+      // Register events on both 2D and 3D layers
+      ['ageb-fill', 'ageb-extrusion'].forEach((layerId) => {
+        instance.on('mousemove', layerId, handleMouseMove);
+        instance.on('mouseleave', layerId, handleMouseLeave);
+        instance.on('click', layerId, handleClick);
       });
 
       setMapReady(true);
@@ -455,50 +524,83 @@ export default function UrbanMap({
     };
   }, [geojson]);
 
+  // Update Choropleth & Extrusion Color on metric/scale change
   useEffect(() => {
-    if (
-      !mapReady ||
-      !map.current ||
-      !map.current.getLayer('ageb-fill') ||
-      !scale.length
-    ) {
-      return;
+    if (!mapReady || !map.current || !scale.length) return;
+
+    const expr = colorExpression(selectedMetric, scale);
+
+    if (map.current.getLayer('ageb-fill')) {
+      map.current.setPaintProperty('ageb-fill', 'fill-color', expr);
     }
 
-    map.current.setPaintProperty(
-      'ageb-fill',
-      'fill-color',
-      colorExpression(selectedMetric, scale),
-    );
-  }, [mapReady, selectedMetric, scale]);
-
-  useEffect(() => {
-    if (
-      !mapReady ||
-      !map.current ||
-      !map.current.getLayer('ageb-fill')
-    ) {
-      return;
+    if (map.current.getLayer('ageb-extrusion')) {
+      map.current.setPaintProperty('ageb-extrusion', 'fill-extrusion-color', expr);
+      map.current.setPaintProperty(
+        'ageb-extrusion',
+        'fill-extrusion-height',
+        extrusionHeightExpression(selectedMetric, maxMetricValue),
+      );
     }
+  }, [mapReady, selectedMetric, scale, maxMetricValue]);
 
-    map.current.setPaintProperty(
-      'ageb-fill',
-      'fill-opacity',
-      [
+  // Update Opacity
+  useEffect(() => {
+    if (!mapReady || !map.current) return;
+
+    if (map.current.getLayer('ageb-fill')) {
+      map.current.setPaintProperty('ageb-fill', 'fill-opacity', [
         'case',
         ['boolean', ['feature-state', 'hover'], false],
-        Math.min(opacity + 0.2, 1),
+        Math.min(opacity + 0.18, 1),
         opacity,
-      ],
-    );
+      ]);
+    }
+
+    if (map.current.getLayer('ageb-extrusion')) {
+      map.current.setPaintProperty('ageb-extrusion', 'fill-extrusion-opacity', opacity);
+    }
   }, [mapReady, opacity]);
 
+  // Toggle 2D vs 3D Extrusion
   useEffect(() => {
-    if (
-      !mapReady ||
-      !map.current ||
-      !map.current.getLayer('ageb-selected')
-    ) {
+    if (!mapReady || !map.current) return;
+
+    if (is3D) {
+      if (map.current.getLayer('ageb-fill')) {
+        map.current.setPaintProperty('ageb-fill', 'fill-opacity', 0.22);
+      }
+      if (map.current.getLayer('ageb-extrusion')) {
+        map.current.setLayoutProperty('ageb-extrusion', 'visibility', 'visible');
+      }
+      map.current.easeTo({
+        pitch: 50,
+        bearing: -16,
+        duration: 900,
+      });
+    } else {
+      if (map.current.getLayer('ageb-fill')) {
+        map.current.setPaintProperty('ageb-fill', 'fill-opacity', [
+          'case',
+          ['boolean', ['feature-state', 'hover'], false],
+          Math.min(opacity + 0.18, 1),
+          opacity,
+        ]);
+      }
+      if (map.current.getLayer('ageb-extrusion')) {
+        map.current.setLayoutProperty('ageb-extrusion', 'visibility', 'none');
+      }
+      map.current.easeTo({
+        pitch: 0,
+        bearing: 0,
+        duration: 900,
+      });
+    }
+  }, [mapReady, is3D, opacity]);
+
+  // Handle selected AGEB change (highlight & fitBounds)
+  useEffect(() => {
+    if (!mapReady || !map.current || !map.current.getLayer('ageb-selected')) {
       return;
     }
 
@@ -511,97 +613,234 @@ export default function UrbanMap({
     if (!selectedCvegeo || !geojson) return;
 
     const feature = geojson.features.find(
-      (item) =>
-        String(item.properties?.cvegeo) ===
-        String(selectedCvegeo),
+      (item) => String(item.properties?.cvegeo) === String(selectedCvegeo),
     );
 
     if (!feature) return;
 
     const bounds = geometryBounds(feature.geometry);
-
     if (!bounds.isEmpty()) {
       map.current.fitBounds(bounds, {
-        padding: 80,
-        maxZoom: 14,
-        duration: 650,
+        padding: 90,
+        maxZoom: 14.5,
+        duration: 750,
       });
     }
   }, [mapReady, selectedCvegeo, geojson]);
 
-  const activeMetric = KPI_LOOKUP[selectedMetric];
+  const activeMetric = KPI_LOOKUP[selectedMetric] || KPI_OPTIONS[0];
+
+  const handleResetCamera = () => {
+    if (!map.current) return;
+    map.current.flyTo({
+      center: [-89.6237, 20.9674],
+      zoom: 11.2,
+      pitch: is3D ? 48 : 0,
+      bearing: is3D ? -16 : 0,
+      duration: 1000,
+    });
+  };
+
+  const handleZoom = (delta) => {
+    if (!map.current) return;
+    map.current.zoomTo(map.current.getZoom() + delta, { duration: 300 });
+  };
+
+  // Top 4 popular KPIs for quick buttons
+  const quickKpis = [
+    'densidad_poblacion_km2',
+    'total_negocios',
+    'poblacion_total',
+    'tasa_pea_porcentaje',
+  ];
 
   return (
     <div className="urban-map">
       <div ref={mapContainer} className="urban-map__canvas" />
 
-      <section className="urban-map__controls">
-        <label>
-          <span>Choropleth KPI</span>
-
-          <select
-            value={selectedMetric}
-            onChange={(event) =>
-              setSelectedMetric(event.target.value)
-            }
+      {/* Floating HUD Controls (Collapsible, Top Left) */}
+      <section
+        className={`urban-map__hud glass-panel ${controlsExpanded ? 'is-expanded' : 'is-collapsed'}`}
+      >
+        <div
+          className="urban-map__hud-header"
+          onClick={() => setControlsExpanded(!controlsExpanded)}
+        >
+          <div className="urban-map__hud-title">
+            <Sliders size={16} className="text-cyan" />
+            <span>Capas & Métricas</span>
+          </div>
+          <button
+            type="button"
+            className="hud-toggle-btn"
+            title={controlsExpanded ? 'Colapsar controles' : 'Expandir controles'}
           >
-            {KPI_OPTIONS.map((option) => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          <span>
-            Polygon opacity
-            <b>{Math.round(opacity * 100)}%</b>
-          </span>
-
-          <input
-            type="range"
-            min="0.2"
-            max="0.95"
-            step="0.05"
-            value={opacity}
-            onChange={(event) =>
-              setOpacity(Number(event.target.value))
-            }
-          />
-        </label>
-
-        <div className="urban-map__status">
-          {geojson
-            ? `${geojson.features.length} AGEB polygons loaded`
-            : 'Loading AGEB polygons…'}
+            {controlsExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+          </button>
         </div>
+
+        {controlsExpanded && (
+          <div className="urban-map__hud-body">
+            {/* Quick KPI Chips */}
+            <div className="hud-quick-chips">
+              {quickKpis.map((kpiKey) => {
+                const opt = KPI_LOOKUP[kpiKey];
+                const active = selectedMetric === kpiKey;
+                return (
+                  <button
+                    key={kpiKey}
+                    type="button"
+                    className={`hud-chip ${active ? 'is-active' : ''}`}
+                    onClick={() => setSelectedMetric(kpiKey)}
+                  >
+                    {opt.shortLabel}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Metric Select Dropdown */}
+            <label className="hud-field">
+              <span className="hud-field-label">
+                Métrica Coroplética
+              </span>
+              <div className="hud-select-wrap">
+                <select
+                  value={selectedMetric}
+                  onChange={(e) => setSelectedMetric(e.target.value)}
+                >
+                  {KPI_OPTIONS.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {option.label} ({option.unit})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </label>
+
+            {/* 2D / 3D Extrusion & Palette Row */}
+            <div className="hud-mode-row">
+              <button
+                type="button"
+                className={`hud-mode-btn ${is3D ? 'is-active' : ''}`}
+                onClick={() => setIs3D(!is3D)}
+                title="Alternar vista isométrica 3D de alturas"
+              >
+                <Box size={14} />
+                <span>{is3D ? 'Modo 3D Alturas' : 'Modo 2D Plano'}</span>
+              </button>
+
+              <div className="hud-palette-selector">
+                {Object.values(PALETTES).map((pal) => (
+                  <button
+                    key={pal.id}
+                    type="button"
+                    className={`hud-palette-dot ${paletteKey === pal.id ? 'is-selected' : ''}`}
+                    style={{ backgroundColor: pal.accent }}
+                    title={`Paleta: ${pal.name}`}
+                    onClick={() => setPaletteKey(pal.id)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Opacity Slider */}
+            <div className="hud-field hud-field--slider">
+              <div className="hud-slider-header">
+                <span>Opacidad de Polígonos</span>
+                <span className="hud-slider-val">{Math.round(opacity * 100)}%</span>
+              </div>
+              <input
+                type="range"
+                min="0.2"
+                max="0.95"
+                step="0.05"
+                value={opacity}
+                onChange={(e) => setOpacity(Number(e.target.value))}
+                className="hud-slider"
+              />
+            </div>
+
+            {/* Status Info */}
+            <div className="hud-footer-status">
+              <span className="live-beacon" />
+              <span>
+                {geojson
+                  ? `${geojson.features.length} AGEBs urbanos renderizados`
+                  : 'Cargando cartografía geoespacial…'}
+              </span>
+            </div>
+          </div>
+        )}
       </section>
 
-      {scale.length > 0 && (
-        <section className="urban-map__legend">
-          <strong>{activeMetric.label}</strong>
+      {/* Floating Action Toolbar (Right Side) */}
+      <div className="urban-map__toolbar glass-panel">
+        <button
+          type="button"
+          onClick={() => handleZoom(1)}
+          title="Acercar mapa"
+          className="toolbar-btn"
+        >
+          <Plus size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={() => handleZoom(-1)}
+          title="Alejar mapa"
+          className="toolbar-btn"
+        >
+          <Minus size={16} />
+        </button>
+        <div className="toolbar-divider" />
+        <button
+          type="button"
+          onClick={() => setIs3D(!is3D)}
+          title={is3D ? 'Cambiar a 2D' : 'Ver 3D Isométrico'}
+          className={`toolbar-btn ${is3D ? 'is-active' : ''}`}
+        >
+          <Box size={16} />
+        </button>
+        <button
+          type="button"
+          onClick={handleResetCamera}
+          title="Restablecer vista a Mérida"
+          className="toolbar-btn"
+        >
+          <RotateCcw size={15} />
+        </button>
+      </div>
 
-          <div className="urban-map__legend-scale">
-            {scale.map((stop) => (
-              <div key={`${stop.value}-${stop.color}`}>
-                <i
-                  style={{
-                    backgroundColor: stop.color,
-                  }}
-                />
-                <span>{formatNumber(stop.value)}</span>
-              </div>
-            ))}
+      {/* Bottom Horizontal Gradient Legend (Never collides with top controls) */}
+      {scale.length > 0 && (
+        <section className="urban-map__gradient-legend glass-panel">
+          <div className="gradient-legend__header">
+            <span className="gradient-legend__title">
+              {activeMetric.label}
+            </span>
+            <span className="gradient-legend__unit">
+              {activeMetric.unit}
+            </span>
           </div>
 
-          <small>{activeMetric.unit}</small>
+          <div
+            className="gradient-legend__bar"
+            style={{
+              background: `linear-gradient(to right, ${scale.map((s) => s.color).join(', ')})`,
+            }}
+          />
+
+          <div className="gradient-legend__labels">
+            <span>{formatNumber(scale[0].value, 1)}</span>
+            <span>{formatNumber(scale[Math.floor(scale.length / 2)].value, 1)}</span>
+            <span>{formatNumber(scale[scale.length - 1].value, 1)}</span>
+          </div>
         </section>
       )}
 
       {error && (
-        <div className="urban-map__error">
-          Map data could not be loaded: {error.message}
+        <div className="urban-map__error glass-panel">
+          Error al cargar datos geoespaciales: {error.message}
         </div>
       )}
     </div>

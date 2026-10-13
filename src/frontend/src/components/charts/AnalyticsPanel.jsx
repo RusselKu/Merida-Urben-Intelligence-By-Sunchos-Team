@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { LayoutDashboard, Building2, ShieldAlert, Network, Sparkles, MapPin } from 'lucide-react';
 import useAnalyticsSummary from './useAnalyticsSummary';
 import KpiSummaryCards from './KpiSummaryCards';
 import AgeDistributionChart from './AgeDistributionChart';
@@ -9,16 +10,15 @@ import { CrimeByCategoryChart, CrimeTimeHeatmap, CrimeTrendChart } from './Crime
 import './charts.css';
 
 const TABS = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'economy', label: 'Economy' },
-  { id: 'safety', label: 'Safety' },
-  { id: 'correlation', label: 'Correlation' },
+  { id: 'overview', label: 'Resumen', icon: LayoutDashboard },
+  { id: 'economy', label: 'Economía', icon: Building2 },
+  { id: 'safety', label: 'Seguridad', icon: ShieldAlert },
+  { id: 'correlation', label: 'Correlación', icon: Network },
 ];
 
 /**
- * Analytics panel for the dashboard. Self-contained: it loads its own data feed.
- *
- * Props (both optional, for syncing with the MapLibre map):
+ * Analytics panel for the dashboard.
+ * Props:
  *   selectedCvegeo  – AGEB clicked on the map; Overview then shows that AGEB's KPIs.
  *   onSelectAgeb    – called with a cvegeo when the user clicks a point in a scatter plot.
  */
@@ -31,49 +31,87 @@ export default function AnalyticsPanel({ selectedCvegeo = null, onSelectAgeb }) 
     [data, selectedCvegeo],
   );
 
-  if (loading) return <div className="analytics-panel analytics-panel--status">Loading analytics…</div>;
-  if (error)
+  if (loading) {
     return (
-      <div className="analytics-panel analytics-panel--status">
-        Could not load the analytics feed ({error.message}). Run notebooks/02_kpi_correlation_analysis.ipynb against
-        the warehouse to generate public/data/analytics_summary.json.
+      <div className="analytics-panel analytics-panel--status glass-panel">
+        <div className="loading-spinner" />
+        <span>Cargando matriz analítica y almacén de datos…</span>
       </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="analytics-panel analytics-panel--status analytics-panel--error glass-panel">
+        No se pudo cargar el feed de analíticas ({error.message}). Verifica que los datos en public/data/analytics_summary.json existan.
+      </div>
+    );
+  }
 
   return (
     <div className="analytics-panel">
-      <nav className="analytics-tabs">
-        {TABS.map((t) => (
-          <button key={t.id} type="button" className={tab === t.id ? 'is-active' : ''} onClick={() => setTab(t.id)}>
-            {t.label}
-          </button>
-        ))}
+      {/* Tab Navigation with Icons */}
+      <nav className="analytics-tabs glass-panel">
+        {TABS.map((t) => {
+          const Icon = t.icon;
+          const isActive = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              className={`analytics-tab-btn ${isActive ? 'is-active' : ''}`}
+              onClick={() => setTab(t.id)}
+            >
+              <Icon size={14} className="tab-icon" />
+              <span>{t.label}</span>
+            </button>
+          );
+        })}
       </nav>
 
-      {tab === 'overview' && (
-        <>
-          {ageb && <p className="analytics-context">Showing AGEB {ageb.cvegeo}</p>}
-          <KpiSummaryCards summary={data} ageb={ageb} />
-          <AgeDistributionChart summary={data} ageb={ageb} />
-        </>
-      )}
-      {tab === 'economy' && <SectorBreakdownChart summary={data} />}
-      {tab === 'safety' && (
-        <>
-          <CrimeByCategoryChart summary={data} />
-          <CrimeTimeHeatmap summary={data} />
-          <CrimeTrendChart summary={data} />
-        </>
-      )}
-      {tab === 'correlation' && (
-        <>
-          <CorrelationScatter summary={data} onSelectAgeb={onSelectAgeb} />
-          <CorrelationHeatmap summary={data} />
-        </>
-      )}
+      {/* Tab Content */}
+      <div className="analytics-tab-content">
+        {tab === 'overview' && (
+          <div className="tab-pane-fade">
+            {ageb && (
+              <div className="analytics-context-badge">
+                <MapPin size={13} className="text-cyan" />
+                <span>Enfocado en AGEB <strong>{ageb.cvegeo}</strong></span>
+              </div>
+            )}
+            <KpiSummaryCards summary={data} ageb={ageb} />
+            <AgeDistributionChart summary={data} ageb={ageb} />
+          </div>
+        )}
+
+        {tab === 'economy' && (
+          <div className="tab-pane-fade">
+            <SectorBreakdownChart summary={data} />
+          </div>
+        )}
+
+        {tab === 'safety' && (
+          <div className="tab-pane-fade">
+            <CrimeByCategoryChart summary={data} />
+            <CrimeTimeHeatmap summary={data} />
+            <CrimeTrendChart summary={data} />
+          </div>
+        )}
+
+        {tab === 'correlation' && (
+          <div className="tab-pane-fade">
+            <CorrelationScatter summary={data} onSelectAgeb={onSelectAgeb} />
+            <CorrelationHeatmap summary={data} />
+          </div>
+        )}
+      </div>
 
       <footer className="analytics-footer">
-        Source: {data.source} · generated {data.generated_at?.slice(0, 10)}
+        <div className="footer-meta">
+          <span>Fuente: {data.source}</span>
+          <span>·</span>
+          <span>Actualizado: {data.generated_at?.slice(0, 10)}</span>
+        </div>
       </footer>
     </div>
   );

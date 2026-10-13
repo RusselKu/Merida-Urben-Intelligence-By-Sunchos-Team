@@ -243,12 +243,32 @@ export default function UrbanMap({
   const [opacity, setOpacity] = useState(0.78);
   const [is3D, setIs3D] = useState(false);
   const [paletteKey, setPaletteKey] = useState('cyan');
-  const [controlsExpanded, setControlsExpanded] = useState(true);
+  const [controlsExpanded, setControlsExpanded] = useState(
+    () => typeof window !== 'undefined' ? window.innerWidth > 768 : true,
+  );
+  const [legendExpanded, setLegendExpanded] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [error, setError] = useState(null);
   const [metricsError, setMetricsError] = useState(null);
 
   selectedMetricRef.current = selectedMetric;
+
+  // Keep MapLibre synchronized with dynamic viewport container resizing
+  useEffect(() => {
+    if (!map.current || !mapContainer.current) return;
+    const observer = new ResizeObserver(() => {
+      map.current?.resize();
+    });
+    observer.observe(mapContainer.current);
+    return () => observer.disconnect();
+  }, [mapReady]);
+
+  // Auto-collapse legend on small screens when an AGEB is selected to give full stage to the card
+  useEffect(() => {
+    if (selectedCvegeo && typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setLegendExpanded(false);
+    }
+  }, [selectedCvegeo]);
 
   // Max value of selected metric for 3D extrusion scale
   const maxMetricValue = useMemo(() => {
@@ -647,8 +667,9 @@ export default function UrbanMap({
 
     const bounds = geometryBounds(feature.geometry);
     if (!bounds.isEmpty()) {
+      const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
       map.current.fitBounds(bounds, {
-        padding: 90,
+        padding: isMobile ? 40 : 90,
         maxZoom: 14.5,
         duration: 750,
       });
@@ -842,41 +863,60 @@ export default function UrbanMap({
 
       {/* Bottom Horizontal Gradient Legend (Never collides with top controls) */}
       {scale.length > 0 && (
-        <section className="urban-map__gradient-legend glass-panel">
-          <div className="gradient-legend__header">
+        <section
+          className={`urban-map__gradient-legend glass-panel ${legendExpanded ? 'is-expanded' : 'is-collapsed'}`}
+        >
+          <div
+            className="gradient-legend__header"
+            onClick={() => setLegendExpanded((prev) => !prev)}
+            title={legendExpanded ? 'Collapse legend' : 'Expand legend'}
+          >
             <span className="gradient-legend__title">
               {activeMetric.label}
             </span>
-            <span className="gradient-legend__unit">
-              {activeMetric.unit}
-            </span>
+            <div className="gradient-legend__header-right">
+              <span className="gradient-legend__unit">
+                {activeMetric.unit}
+              </span>
+              <button
+                type="button"
+                className="legend-toggle-btn"
+                aria-label={legendExpanded ? 'Collapse legend' : 'Expand legend'}
+              >
+                {legendExpanded ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
+              </button>
+            </div>
           </div>
 
-          <ol className="legend-classes">
-            {scale.map((cls) => (
-              <li
-                className="legend-class"
-                key={cls.min}
-                title={`${formatNumber(cls.min, 1)} – ${formatNumber(cls.max, 1)} ${
-                  activeMetric.unit
-                } · ${cls.count} AGEB${cls.count === 1 ? '' : 's'}`}
-              >
-                <i style={{ background: cls.color }} />
-                <span className="legend-class__edge">
-                  {formatNumber(cls.min, 0)}
-                </span>
-              </li>
-            ))}
-          </ol>
+          {legendExpanded && (
+            <>
+              <ol className="legend-classes">
+                {scale.map((cls) => (
+                  <li
+                    className="legend-class"
+                    key={cls.min}
+                    title={`${formatNumber(cls.min, 1)} – ${formatNumber(cls.max, 1)} ${
+                      activeMetric.unit
+                    } · ${cls.count} AGEB${cls.count === 1 ? '' : 's'}`}
+                  >
+                    <i style={{ background: cls.color }} />
+                    <span className="legend-class__edge">
+                      {formatNumber(cls.min, 0)}
+                    </span>
+                  </li>
+                ))}
+              </ol>
 
-          <p className="legend-footnote">
-            <span>
-              Quintiles · {scale.reduce((sum, cls) => sum + cls.count, 0)} AGEBs
-            </span>
-            <span className="legend-footnote__max">
-              max {formatNumber(scale[scale.length - 1].max, 0)}
-            </span>
-          </p>
+              <p className="legend-footnote">
+                <span>
+                  Quintiles · {scale.reduce((sum, cls) => sum + cls.count, 0)} AGEBs
+                </span>
+                <span className="legend-footnote__max">
+                  max {formatNumber(scale[scale.length - 1].max, 0)}
+                </span>
+              </p>
+            </>
+          )}
         </section>
       )}
 

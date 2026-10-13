@@ -19,7 +19,7 @@ export default function AgeDistributionChart({ summary, ageb = null }) {
 
   const options = baseOptions({
     labels: groups.map((g) => `${g.group} years`),
-    colors: [COLORS.cyan, COLORS.indigo, COLORS.amber],
+    colors: [COLORS.amber, COLORS.cyan, COLORS.pink],
     stroke: { width: 0 },
     legend: { position: 'bottom', labels: { colors: COLORS.muted } },
     dataLabels: { enabled: true, formatter: (pct) => `${pct.toFixed(1)}%` },

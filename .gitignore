@@ -47,7 +47,7 @@ yarn-error.log*
 out/
 dist/
 .cache/
-
+.playwright-mcp/
 # Large Datasets (keep directories via .gitkeep)
 data/raw/*
 !data/raw/.gitkeep

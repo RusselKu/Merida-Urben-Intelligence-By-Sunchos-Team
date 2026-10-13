@@ -35,7 +35,7 @@
   padding: 12px 14px;
   cursor: pointer;
   user-select: none;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(244, 241, 236, 0.02);
   border-bottom: 1px solid transparent;
   transition: background var(--transition-fast);
 }
@@ -45,14 +45,14 @@
 }
 
 .urban-map__hud-header:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(244, 241, 236, 0.05);
 }
 
 .urban-map__hud-title {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -69,7 +69,7 @@
   width: 24px;
   height: 24px;
   border: 0;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(244, 241, 236, 0.05);
   color: var(--text-secondary);
   border-radius: var(--radius-sm);
   cursor: pointer;
@@ -77,7 +77,7 @@
 }
 
 .hud-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(244, 241, 236, 0.12);
   color: var(--text-bright);
 }
 
@@ -99,7 +99,7 @@
   padding: 6px 8px;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(244, 241, 236, 0.03);
   color: var(--text-secondary);
   font-size: 0.72rem;
   font-weight: 600;
@@ -112,16 +112,16 @@
 }
 
 .hud-chip:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(244, 241, 236, 0.08);
   color: var(--text-bright);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(244, 241, 236, 0.15);
 }
 
 .hud-chip.is-active {
-  background: rgba(6, 182, 212, 0.16);
+  background: rgba(75, 163, 199, 0.16);
   border-color: var(--accent-cyan);
   color: var(--accent-cyan-light);
-  box-shadow: 0 0 12px -2px rgba(6, 182, 212, 0.3);
+  box-shadow: 0 0 12px -2px rgba(75, 163, 199, 0.3);
 }
 
 /* Metric select dropdown */
@@ -159,7 +159,7 @@
 
 .hud-select-wrap select:focus {
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+  box-shadow: 0 0 0 2px rgba(75, 163, 199, 0.2);
 }
 
 /* Mode row (3D Toggle & Palettes) */
@@ -176,7 +176,7 @@
   align-items: center;
   gap: 7px;
   padding: 7px 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(244, 241, 236, 0.04);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
@@ -187,15 +187,15 @@
 }
 
 .hud-mode-btn:hover {
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(244, 241, 236, 0.09);
   color: var(--text-primary);
 }
 
 .hud-mode-btn.is-active {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.25));
+  background: linear-gradient(135deg, rgba(107, 143, 184, 0.25), rgba(75, 163, 199, 0.25));
   border-color: var(--accent-cyan);
   color: var(--accent-cyan-light);
-  box-shadow: 0 0 14px -2px rgba(6, 182, 212, 0.35);
+  box-shadow: 0 0 14px -2px rgba(75, 163, 199, 0.35);
 }
 
 /* Palette selector */
@@ -204,7 +204,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 6px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(244, 241, 236, 0.03);
   border-radius: var(--radius-full);
   border: 1px solid var(--border-subtle);
 }
@@ -245,14 +245,14 @@
 
 .hud-slider-val {
   color: var(--accent-cyan-light);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
 }
 
 .hud-slider {
   width: 100%;
   height: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(244, 241, 236, 0.1);
   border-radius: 2px;
   outline: none;
   cursor: pointer;
@@ -299,12 +299,12 @@
 }
 
 .toolbar-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(244, 241, 236, 0.1);
   color: var(--text-bright);
 }
 
 .toolbar-btn.is-active {
-  background: rgba(6, 182, 212, 0.2);
+  background: rgba(75, 163, 199, 0.2);
   color: var(--accent-cyan-light);
 }
 
@@ -338,7 +338,7 @@
 }
 
 .gradient-legend__title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 0.76rem;
   font-weight: 700;
   color: var(--text-bright);
@@ -348,7 +348,7 @@
   font-size: 0.65rem;
   font-weight: 600;
   color: var(--accent-cyan-light);
-  background: rgba(6, 182, 212, 0.1);
+  background: rgba(75, 163, 199, 0.1);
   padding: 2px 6px;
   border-radius: var(--radius-full);
 }
@@ -380,20 +380,20 @@
 }
 
 .custom-map-popup .maplibregl-popup-tip {
-  border-top-color: rgba(11, 17, 30, 0.95) !important;
-  border-bottom-color: rgba(11, 17, 30, 0.95) !important;
+  border-top-color: rgba(12, 13, 16, 0.95) !important;
+  border-bottom-color: rgba(12, 13, 16, 0.95) !important;
 }
 
 .hud-tooltip {
   min-width: 250px;
   max-width: 290px;
   padding: 14px;
-  background: rgba(9, 14, 26, 0.94);
+  background: rgba(10, 11, 14, 0.94);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  border: 1px solid rgba(75, 163, 199, 0.3);
   border-radius: var(--radius-lg);
-  box-shadow: 0 16px 40px -4px rgba(0, 0, 0, 0.65), 0 0 20px -2px rgba(6, 182, 212, 0.25);
+  box-shadow: 0 16px 40px -4px rgba(0, 0, 0, 0.65), 0 0 20px -2px rgba(75, 163, 199, 0.25);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -421,22 +421,22 @@
 }
 
 .hud-badge--type {
-  background: rgba(99, 102, 241, 0.15);
-  color: #a5b4fc;
+  background: rgba(107, 143, 184, 0.15);
+  color: var(--accent-cyan-light);
 }
 
 .hud-badge--cp {
-  background: rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
+  background: rgba(244, 241, 236, 0.08);
+  color: var(--text-primary);
 }
 
 .hud-badge--cve {
-  background: rgba(6, 182, 212, 0.15);
+  background: rgba(75, 163, 199, 0.15);
   color: var(--accent-cyan-light);
 }
 
 .hud-tooltip__title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 0.92rem;
   font-weight: 700;
   color: var(--text-bright);
@@ -445,7 +445,7 @@
 
 .hud-tooltip__highlight {
   padding: 8px 10px;
-  background: rgba(6, 182, 212, 0.08);
+  background: rgba(75, 163, 199, 0.08);
   border: 1px solid rgba(34, 211, 238, 0.2);
   border-radius: var(--radius-md);
   display: flex;
@@ -458,7 +458,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #94a3b8;
+  color: var(--text-secondary);
 }
 
 .hud-tooltip__metric-val {
@@ -468,15 +468,15 @@
 }
 
 .hud-tooltip__metric-val span {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 1.15rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--accent-cyan-light);
 }
 
 .hud-tooltip__metric-val small {
   font-size: 0.68rem;
-  color: #cbd5e1;
+  color: var(--text-primary);
 }
 
 .hud-tooltip__grid {
@@ -489,7 +489,7 @@
   display: flex;
   flex-direction: column;
   padding: 6px 8px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(244, 241, 236, 0.03);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
 }
@@ -500,7 +500,7 @@
 }
 
 .hud-tooltip__stat strong {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-display);
   font-size: 0.82rem;
   color: var(--text-primary);
 }
@@ -533,8 +533,8 @@
   z-index: 20;
   max-width: 90%;
   padding: 10px 16px;
-  background: rgba(127, 29, 29, 0.9);
-  border: 1px solid rgba(239, 68, 68, 0.5);
+  background: rgba(74, 32, 25, 0.9);
+  border: 1px solid rgba(212, 101, 79, 0.5);
   border-radius: var(--radius-md);
   color: #fecaca;
   font-size: 0.8rem;

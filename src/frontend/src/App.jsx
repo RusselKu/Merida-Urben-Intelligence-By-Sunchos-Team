@@ -79,7 +79,7 @@ export default function App() {
                 <span className="brand-version-tag">v2.4 Enterprise</span>
               </div>
               <p className="brand-subtitle">
-                Data Warehouse Geoespacial · INEGI Censo 2020 & DENUE
+                Geospatial Data Warehouse · INEGI Census 2020 & DENUE
               </p>
             </div>
           </div>
@@ -91,7 +91,7 @@ export default function App() {
             <Search size={16} className="search-icon" />
             <input
               type="text"
-              placeholder="Buscar Colonia, Fracc. o AGEB (ej. Centro, Chuburná, Altabrisa)..."
+              placeholder="Search neighborhood, colonia, or AGEB (e.g. Centro, Caucel)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => {
@@ -118,7 +118,7 @@ export default function App() {
           {searchOpen && (
             <div className="search-dropdown glass-panel">
               <div className="search-dropdown__header">
-                <span>Resultados de búsqueda ({searchResults.length})</span>
+                <span>Search results ({searchResults.length})</span>
               </div>
               <div className="search-dropdown__list">
                 {searchResults.map((item) => (
@@ -144,7 +144,7 @@ export default function App() {
                       </div>
                       <small className="search-item-sub">
                         AGEB: {item.cvegeo}
-                        {item.coveragePct ? ` · Cobertura: ${item.coveragePct}%` : ''}
+                        {item.coveragePct ? ` · Coverage: ${item.coveragePct}%` : ''}
                       </small>
                     </div>
                   </button>
@@ -159,7 +159,7 @@ export default function App() {
           <div className="header-stat-pill">
             <Users size={14} className="stat-pill-icon text-cyan" />
             <div className="stat-pill-data">
-              <span>Población</span>
+              <span>Population</span>
               <strong>957,399</strong>
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function App() {
           <div className="header-stat-pill">
             <Building2 size={14} className="stat-pill-icon text-emerald" />
             <div className="stat-pill-data">
-              <span>Negocios</span>
+              <span>Businesses</span>
               <strong>56,614</strong>
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function App() {
           <div className="header-divider" />
 
           {/* Live DB Beacon */}
-          <div className="header-live-indicator" title="Conexión en vivo al Data Warehouse PostGIS">
+          <div className="header-live-indicator" title="Live connection to PostGIS Data Warehouse">
             <span className="live-beacon" />
             <span className="live-label">PostGIS Sync</span>
           </div>
@@ -192,7 +192,7 @@ export default function App() {
           <button
             type="button"
             className="sidebar-toggle-btn"
-            title={sidebarOpen ? 'Ocultar panel analítico' : 'Mostrar panel analítico'}
+            title={sidebarOpen ? 'Collapse analytics panel' : 'Expand analytics panel'}
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             {sidebarOpen ? <PanelRightClose size={18} /> : <PanelRightOpen size={18} />}
@@ -221,9 +221,9 @@ export default function App() {
               <div className="sidebar-header-row">
                 <div className="sidebar-heading">
                   <MapPinned size={18} className="text-cyan" />
-                  <h2>Analítica Territorial</h2>
+                  <h2>Urban Analytics</h2>
                 </div>
-                <span className="sidebar-meta-badge">Censo 2020 · DENUE</span>
+                <span className="sidebar-meta-badge">Census 2020 · DENUE</span>
               </div>
 
               {/* Selected AGEB Inspector Dossier */}
@@ -232,7 +232,7 @@ export default function App() {
                   <div className="selected-dossier__main">
                     <div className="selected-dossier__badges">
                       <span className="dossier-tag dossier-tag--active">
-                        AGEB Seleccionado
+                        Selected AGEB
                       </span>
                       {selectedReferenceArea?.type && (
                         <span className="dossier-tag dossier-tag--type">
@@ -247,15 +247,15 @@ export default function App() {
                     </div>
 
                     <h3 className="selected-dossier__name">
-                      {selectedReferenceArea?.name || 'Área Urbana sin denominación oficial'}
+                      {selectedReferenceArea?.name || 'Urban area without official denomination'}
                     </h3>
 
                     <div className="selected-dossier__cve">
-                      <span>Clave Geoestadística:</span>
+                      <span>Geostatistical Key:</span>
                       <strong>{selectedCvegeo}</strong>
                       {selectedReferenceArea?.coveragePct && (
                         <span className="coverage-pill">
-                          {selectedReferenceArea.coveragePct}% cobertura
+                          {selectedReferenceArea.coveragePct}% coverage
                         </span>
                       )}
                     </div>
@@ -264,7 +264,7 @@ export default function App() {
                   <button
                     type="button"
                     className="selected-dossier__close"
-                    title="Limpiar selección y volver a vista ciudad"
+                    title="Clear selection and reset to citywide view"
                     onClick={() => setSelectedCvegeo(null)}
                   >
                     <X size={16} />
@@ -274,7 +274,7 @@ export default function App() {
                 <div className="city-scope-banner">
                   <Sparkles size={15} className="text-cyan" />
                   <span>
-                    Vista general de la ciudad · Haz clic en cualquier AGEB del mapa para inspeccionar
+                    Citywide overview · Click any AGEB polygon on the map to inspect
                   </span>
                 </div>
               )}

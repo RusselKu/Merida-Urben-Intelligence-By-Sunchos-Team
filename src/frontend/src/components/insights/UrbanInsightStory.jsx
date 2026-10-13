@@ -394,14 +394,14 @@ export default function UrbanInsightStory({
             <span>AI Executive Briefing</span>
           </div>
           <span className="urban-story__scope-tag">
-            {ageb ? 'Análisis Local' : 'Visión Metrópoli'}
+            {ageb ? 'Local Analysis' : 'Metropolitan Vision'}
           </span>
         </div>
 
         <h3 className="urban-story__heading">
           {ageb
-            ? `Diagnóstico: ${referenceArea?.name || `AGEB ${ageb.cvegeo}`}`
-            : 'Hallazgos Clave de Mérida'}
+            ? `Diagnosis: ${referenceArea?.name || `AGEB ${ageb.cvegeo}`}`
+            : 'Key Mérida Insights'}
         </h3>
       </header>
 

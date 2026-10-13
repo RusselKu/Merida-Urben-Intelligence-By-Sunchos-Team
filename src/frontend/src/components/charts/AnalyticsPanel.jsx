@@ -10,10 +10,10 @@ import { CrimeByCategoryChart, CrimeTimeHeatmap, CrimeTrendChart } from './Crime
 import './charts.css';
 
 const TABS = [
-  { id: 'overview', label: 'Resumen', icon: LayoutDashboard },
-  { id: 'economy', label: 'Economía', icon: Building2 },
-  { id: 'safety', label: 'Seguridad', icon: ShieldAlert },
-  { id: 'correlation', label: 'Correlación', icon: Network },
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'economy', label: 'Economy', icon: Building2 },
+  { id: 'safety', label: 'Safety', icon: ShieldAlert },
+  { id: 'correlation', label: 'Correlation', icon: Network },
 ];
 
 /**
@@ -35,7 +35,7 @@ export default function AnalyticsPanel({ selectedCvegeo = null, onSelectAgeb }) 
     return (
       <div className="analytics-panel analytics-panel--status glass-panel">
         <div className="loading-spinner" />
-        <span>Cargando matriz analítica y almacén de datos…</span>
+        <span>Loading analytics matrix & data warehouse…</span>
       </div>
     );
   }
@@ -43,7 +43,7 @@ export default function AnalyticsPanel({ selectedCvegeo = null, onSelectAgeb }) 
   if (error) {
     return (
       <div className="analytics-panel analytics-panel--status analytics-panel--error glass-panel">
-        No se pudo cargar el feed de analíticas ({error.message}). Verifica que los datos en public/data/analytics_summary.json existan.
+        Could not load analytics feed ({error.message}). Please verify public/data/analytics_summary.json exists.
       </div>
     );
   }
@@ -76,7 +76,7 @@ export default function AnalyticsPanel({ selectedCvegeo = null, onSelectAgeb }) 
             {ageb && (
               <div className="analytics-context-badge">
                 <MapPin size={13} className="text-cyan" />
-                <span>Enfocado en AGEB <strong>{ageb.cvegeo}</strong></span>
+                <span>Focused on AGEB <strong>{ageb.cvegeo}</strong></span>
               </div>
             )}
             <KpiSummaryCards summary={data} ageb={ageb} />
@@ -108,9 +108,9 @@ export default function AnalyticsPanel({ selectedCvegeo = null, onSelectAgeb }) 
 
       <footer className="analytics-footer">
         <div className="footer-meta">
-          <span>Fuente: {data.source}</span>
+          <span>Source: {data.source}</span>
           <span>·</span>
-          <span>Actualizado: {data.generated_at?.slice(0, 10)}</span>
+          <span>Updated: {data.generated_at?.slice(0, 10)}</span>
         </div>
       </footer>
     </div>

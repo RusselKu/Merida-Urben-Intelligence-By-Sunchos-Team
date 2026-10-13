@@ -7,6 +7,17 @@ const INVALID_TYPES = new Set([
   'NONE',
 ]);
 
+const SETTLEMENT_TYPE_EN = {
+  COLONIA: 'Neighborhood',
+  FRACCIONAMIENTO: 'Subdivision',
+  BARRIO: 'District',
+  PUEBLO: 'Town',
+  EJIDO: 'Ejido',
+  ZONA_MILITAR: 'Military Zone',
+  ZONA_INDUSTRIAL: 'Industrial Zone',
+  HACIENDA: 'Hacienda',
+};
+
 const INVALID_POSTAL_CODES = new Set([
   '',
   '00000',
@@ -37,7 +48,7 @@ export function getAgebReferenceArea(cvegeo) {
       rawType.toUpperCase(),
     )
       ? null
-      : rawType,
+      : (SETTLEMENT_TYPE_EN[rawType.toUpperCase()] || rawType),
 
     postalCode:
       INVALID_POSTAL_CODES.has(rawPostalCode)
@@ -84,7 +95,9 @@ export function searchAgebReferenceAreas(query, limit = 8) {
       results.push({
         cvegeo,
         name: record.primary_name,
-        type: INVALID_TYPES.has(rawType.toUpperCase()) ? null : rawType,
+        type: INVALID_TYPES.has(rawType.toUpperCase())
+          ? null
+          : (SETTLEMENT_TYPE_EN[rawType.toUpperCase()] || rawType),
         postalCode: INVALID_POSTAL_CODES.has(rawCp) ? null : rawCp,
         coveragePct: Number.isFinite(Number(record.coverage_pct))
           ? Number(record.coverage_pct)

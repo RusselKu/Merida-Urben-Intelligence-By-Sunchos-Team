@@ -28,8 +28,11 @@ export default function App() {
   const [searchResults, setSearchResults] = useState([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeResult, setActiveResult] = useState(0);
 
   const searchRef = useRef(null);
+  const scrollRef = useRef(null);
+  const dossierRef = useRef(null);
 
   const selectedReferenceArea = getAgebReferenceArea(selectedCvegeo);
 
@@ -44,7 +47,20 @@ export default function App() {
     const matches = searchAgebReferenceAreas(searchQuery, 8);
     setSearchResults(matches);
     setSearchOpen(matches.length > 0);
+    setActiveResult(0);
   }, [searchQuery]);
+
+  // A new selection replaces everything in the panel, so the panel returns to
+  // the top — otherwise the dossier appears above content from the previous AGEB.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedCvegeo]);
+
+  // ...and the keyboard follows the selection into the panel, which is the only
+  // route to an AGEB that does not require pointing at a polygon.
+  useEffect(() => {
+    if (selectedCvegeo) dossierRef.current?.focus();
+  }, [selectedCvegeo]);
 
   // Click outside search suggestions
   useEffect(() => {
@@ -64,6 +80,24 @@ export default function App() {
     if (!sidebarOpen) setSidebarOpen(true);
   };
 
+  const handleSearchKeyDown = (event) => {
+    if (!searchOpen || !searchResults.length) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActiveResult((i) => (i + 1) % searchResults.length);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveResult((i) => (i - 1 + searchResults.length) % searchResults.length);
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      const match = searchResults[activeResult];
+      if (match) handleSelectSearchResult(match.cvegeo);
+    } else if (event.key === 'Escape') {
+      setSearchOpen(false);
+    }
+  };
+
   return (
     <div className={`app-shell ${sidebarOpen ? 'with-sidebar' : 'map-only'}`}>
       {/* Top Application Header / Command Bar */}
@@ -76,7 +110,6 @@ export default function App() {
             <div className="brand-copy">
               <div className="brand-title-row">
                 <h1 className="brand-name">Mérida Urban Intelligence</h1>
-                <span className="brand-version-tag">v2.4 Enterprise</span>
               </div>
               <p className="brand-subtitle">
                 Geospatial Data Warehouse · INEGI Census 2020 & DENUE
@@ -97,7 +130,17 @@ export default function App() {
               onFocus={() => {
                 if (searchResults.length > 0) setSearchOpen(true);
               }}
+              onKeyDown={handleSearchKeyDown}
               className="global-search-input"
+              role="combobox"
+              aria-expanded={searchOpen}
+              aria-controls="search-results"
+              aria-autocomplete="list"
+              aria-activedescendant={
+                searchOpen && searchResults[activeResult]
+                  ? `search-result-${searchResults[activeResult].cvegeo}`
+                  : undefined
+              }
             />
             {searchQuery && (
               <button
@@ -120,12 +163,16 @@ export default function App() {
               <div className="search-dropdown__header">
                 <span>Search results ({searchResults.length})</span>
               </div>
-              <div className="search-dropdown__list">
-                {searchResults.map((item) => (
+              <div className="search-dropdown__list" id="search-results" role="listbox">
+                {searchResults.map((item, index) => (
                   <button
                     key={item.cvegeo}
+                    id={`search-result-${item.cvegeo}`}
                     type="button"
-                    className="search-item"
+                    role="option"
+                    aria-selected={index === activeResult}
+                    className={`search-item${index === activeResult ? ' is-active' : ''}`}
+                    onMouseEnter={() => setActiveResult(index)}
                     onMouseDown={(e) => {
                       e.preventDefault();
                       handleSelectSearchResult(item.cvegeo);
@@ -228,7 +275,12 @@ export default function App() {
 
               {/* Selected AGEB Inspector Dossier */}
               {selectedCvegeo ? (
-                <div className="selected-dossier">
+                <div
+                  className="selected-dossier"
+                  ref={dossierRef}
+                  tabIndex={-1}
+                  aria-live="polite"
+                >
                   <div className="selected-dossier__main">
                     <div className="selected-dossier__badges">
                       <span className="dossier-tag dossier-tag--active">
@@ -281,8 +333,8 @@ export default function App() {
             </div>
 
             {/* Scrollable Sidebar Analytics Content */}
-            <div className="sidebar-scrollable-content">
-              {/* Executive AI Urban Story */}
+            <div className="sidebar-scrollable-content" ref={scrollRef}>
+              {/* Derived urban briefing */}
               <UrbanInsightStory
                 selectedCvegeo={selectedCvegeo}
                 referenceArea={selectedReferenceArea}

@@ -23,7 +23,7 @@ const TABS = [
  *   onSelectAgeb    – called with a cvegeo when the user clicks a point in a scatter plot.
  */
 export default function AnalyticsPanel({ selectedCvegeo = null, onSelectAgeb }) {
-  const { data, loading, error } = useAnalyticsSummary();
+  const { data, loading, error, reload } = useAnalyticsSummary();
   const [tab, setTab] = useState('overview');
 
   const ageb = useMemo(
@@ -43,7 +43,16 @@ export default function AnalyticsPanel({ selectedCvegeo = null, onSelectAgeb }) 
   if (error) {
     return (
       <div className="analytics-panel analytics-panel--status analytics-panel--error glass-panel">
-        Could not load analytics feed ({error.message}). Please verify public/data/analytics_summary.json exists.
+        <div>
+          <strong>Analytics feed unavailable</strong>
+          <p>
+            The map stays usable; metrics and charts return once the feed responds.
+          </p>
+          <button type="button" className="retry-btn" onClick={reload}>
+            Try again
+          </button>
+          <code>{error.message}</code>
+        </div>
       </div>
     );
   }
@@ -77,6 +86,15 @@ export default function AnalyticsPanel({ selectedCvegeo = null, onSelectAgeb }) 
               <div className="analytics-context-badge">
                 <MapPin size={13} className="text-cyan" />
                 <span>Focused on AGEB <strong>{ageb.cvegeo}</strong></span>
+              </div>
+            )}
+            {selectedCvegeo && !ageb && (
+              <div className="analytics-context-badge analytics-context-badge--warn">
+                <MapPin size={13} />
+                <span>
+                  No warehouse record for AGEB <strong>{selectedCvegeo}</strong>.
+                  Showing citywide figures.
+                </span>
               </div>
             )}
             <KpiSummaryCards summary={data} ageb={ageb} />

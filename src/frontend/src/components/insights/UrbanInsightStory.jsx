@@ -382,27 +382,34 @@ export default function UrbanInsightStory({
   }
 
   if (error || !data) {
-    return null;
+    return (
+      <section className="urban-story urban-story--status glass-panel">
+        Briefing unavailable while the warehouse summary is not loaded.
+      </section>
+    );
+  }
+
+  if (!insights.length) {
+    return (
+      <section className="urban-story urban-story--status glass-panel">
+        {ageb
+          ? 'This AGEB has no values complete enough to summarise.'
+          : 'No citywide patterns could be derived from the current summary.'}
+      </section>
+    );
   }
 
   return (
     <section className="urban-story glass-panel">
       <header className="urban-story__header">
-        <div className="urban-story__title-row">
-          <div className="urban-story__ai-tag">
-            <span className="live-beacon" />
-            <span>AI Executive Briefing</span>
-          </div>
-          <span className="urban-story__scope-tag">
-            {ageb ? 'Local Analysis' : 'Metropolitan Vision'}
-          </span>
-        </div>
-
         <h3 className="urban-story__heading">
           {ageb
             ? `Diagnosis: ${referenceArea?.name || `AGEB ${ageb.cvegeo}`}`
             : 'Key Mérida Insights'}
         </h3>
+        <p className="urban-story__source">
+          Derived from INEGI Census 2020 and DENUE across 526 urban AGEBs
+        </p>
       </header>
 
       <div className="urban-story__items">

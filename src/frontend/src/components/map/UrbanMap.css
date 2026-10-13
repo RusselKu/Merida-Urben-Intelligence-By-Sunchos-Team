@@ -353,20 +353,62 @@
   border-radius: var(--radius-full);
 }
 
-.gradient-legend__bar {
-  width: 100%;
-  height: 8px;
-  border-radius: var(--radius-full);
-  margin-bottom: 5px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+/* Classed legend: one swatch per quintile, each labelled with its lower edge */
+.legend-classes {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.gradient-legend__labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.66rem;
+.legend-class {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.legend-class i {
+  display: block;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 2px;
+}
+
+.legend-class:last-child i {
+  margin-right: 0;
+}
+
+.legend-class__edge {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
   font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.legend-footnote {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 7px 0 0;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* The scale's upper bound closes the legend here rather than colliding with
+   the last class edge, which has only a swatch-width of room */
+.legend-footnote__max {
+  font-family: var(--font-mono);
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 /* ==========================================================
@@ -527,17 +569,68 @@
    ========================================================== */
 .urban-map__error {
   position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  width: min(420px, 82%);
+  padding: 18px 20px;
+  background: rgba(74, 32, 25, 0.92);
+  border: 1px solid rgba(212, 101, 79, 0.5);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+}
+
+.urban-map__error strong {
+  display: block;
+  font-size: 0.92rem;
+  color: var(--accent-rose-light);
+  margin-bottom: 6px;
+}
+
+.urban-map__error p {
+  margin: 0 0 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* The raw cause stays available to whoever is debugging, without being the message */
+.urban-map__error code {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.45;
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text-muted);
+  word-break: break-word;
+}
+
+/* Degraded, not broken: the map still works, the shading does not */
+.urban-map__notice {
+  position: absolute;
   top: 18px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   max-width: 90%;
-  padding: 10px 16px;
-  background: rgba(74, 32, 25, 0.9);
-  border: 1px solid rgba(212, 101, 79, 0.5);
-  border-radius: var(--radius-md);
-  color: #fecaca;
-  font-size: 0.8rem;
+  padding: 8px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  border: 1px solid rgba(217, 164, 65, 0.3);
+  background: rgba(217, 164, 65, 0.12);
+}
+
+.urban-map__notice strong {
+  color: var(--accent-amber-light);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 /* Responsive */

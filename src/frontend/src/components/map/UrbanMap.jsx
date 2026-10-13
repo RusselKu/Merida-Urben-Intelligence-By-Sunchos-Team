@@ -145,44 +145,56 @@ function buildScale(geojson, metric, paletteKey = 'cyan') {
     .filter(Number.isFinite)
     .sort((a, b) => a - b);
 
-  if (!values.length) {
-    return [
-      { value: 0, color: colors[0] },
-      { value: 1, color: colors[colors.length - 1] },
-    ];
+  if (!values.length) return [];
+
+  // Quintile classes. A classed choropleth is read class by class — the reader
+  // can name which fifth of the city an AGEB falls in, which a continuous ramp
+  // never allows. Classes also keep the sparse low end from sinking into the
+  // basemap, since every class gets a full step of colour rather than a slice
+  // of a gradient.
+  const edges = [0, 0.2, 0.4, 0.6, 0.8, 1].map((p) => percentile(values, p));
+
+  const classes = [];
+  for (let i = 0; i < colors.length; i += 1) {
+    const min = edges[i];
+    const max = edges[i + 1];
+    const previous = classes[classes.length - 1];
+
+    // Skewed metrics can repeat an edge (many AGEBs share a value). A repeated
+    // edge would break the step expression, so the class merges into the last.
+    if (previous && min <= previous.min) {
+      previous.max = max;
+      previous.color = colors[i];
+      continue;
+    }
+
+    classes.push({ min, max, color: colors[i] });
   }
 
-  const percentiles = [0, 0.25, 0.5, 0.75, 1];
-  const rawStops = percentiles.map((p, index) => ({
-    value: percentile(values, p),
-    color: colors[index],
-  }));
-
-  const uniqueStops = [];
-  rawStops.forEach((stop) => {
-    const previous = uniqueStops[uniqueStops.length - 1];
-    if (!previous || stop.value > previous.value) {
-      uniqueStops.push(stop);
-    }
+  const isLast = (index) => index === classes.length - 1;
+  classes.forEach((cls, index) => {
+    cls.count = values.filter((v) =>
+      isLast(index) ? v >= cls.min : v >= cls.min && v < cls.max,
+    ).length;
   });
 
-  if (uniqueStops.length === 1) {
-    uniqueStops.push({
-      value: uniqueStops[0].value + 1,
-      color: colors[colors.length - 1],
-    });
-  }
-
-  return uniqueStops;
+  return classes;
 }
 
-function colorExpression(metric, scale) {
-  return [
-    'interpolate',
-    ['linear'],
+function colorExpression(metric, classes) {
+  if (!classes.length) return PALETTES.cyan.colors[0];
+
+  const expression = [
+    'step',
     ['to-number', ['get', metric], 0],
-    ...scale.flatMap((stop) => [stop.value, stop.color]),
+    classes[0].color,
   ];
+
+  classes.slice(1).forEach((cls) => {
+    expression.push(cls.min, cls.color);
+  });
+
+  return expression;
 }
 
 function extrusionHeightExpression(metric, maxVal) {
@@ -234,6 +246,7 @@ export default function UrbanMap({
   const [controlsExpanded, setControlsExpanded] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [error, setError] = useState(null);
+  const [metricsError, setMetricsError] = useState(null);
 
   selectedMetricRef.current = selectedMetric;
 
@@ -251,25 +264,36 @@ export default function UrbanMap({
 
     async function loadData() {
       try {
-        const [geoResponse, analyticsResponse] = await Promise.all([
-          fetch(GEOJSON_URL, { signal: controller.signal }),
-          fetch(ANALYTICS_URL, { signal: controller.signal }),
-        ]);
+        // The geometry alone is enough to draw the city, so only it is fatal.
+        const geoResponse = await fetch(GEOJSON_URL, { signal: controller.signal });
 
         if (!geoResponse.ok) {
-          throw new Error(`GeoJSON request failed: HTTP ${geoResponse.status}`);
-        }
-        if (!analyticsResponse.ok) {
-          throw new Error(`Analytics request failed: HTTP ${analyticsResponse.status}`);
+          throw new Error(`HTTP ${geoResponse.status}`);
         }
 
-        const [geometryData, analyticsData] = await Promise.all([
-          geoResponse.json(),
-          analyticsResponse.json(),
-        ]);
+        const geometryData = await geoResponse.json();
+
+        // The metrics are what colour the polygons. Losing them degrades the map
+        // to plain boundaries rather than taking the whole view down with it.
+        let analyticsData = null;
+        try {
+          const analyticsResponse = await fetch(ANALYTICS_URL, {
+            signal: controller.signal,
+          });
+
+          if (!analyticsResponse.ok) {
+            throw new Error(`HTTP ${analyticsResponse.status}`);
+          }
+
+          analyticsData = await analyticsResponse.json();
+          setMetricsError(null);
+        } catch (metricsLoadError) {
+          if (metricsLoadError.name === 'AbortError') throw metricsLoadError;
+          setMetricsError(metricsLoadError);
+        }
 
         const analyticsByCvegeo = new Map(
-          (analyticsData.agebs || []).map((ageb) => [
+          (analyticsData?.agebs || []).map((ageb) => [
             String(ageb.cvegeo),
             ageb,
           ]),
@@ -766,11 +790,13 @@ export default function UrbanMap({
 
             {/* Status Info */}
             <div className="hud-footer-status">
-              <span className="live-beacon" />
+              {!error && <span className="live-beacon" />}
               <span>
-                {geojson
-                  ? `${geojson.features.length} urban AGEBs rendered`
-                  : 'Loading geospatial cartography…'}
+                {error
+                  ? 'No cartography loaded'
+                  : geojson
+                    ? `${geojson.features.length} urban AGEBs rendered`
+                    : 'Loading geospatial cartography…'}
               </span>
             </div>
           </div>
@@ -826,24 +852,51 @@ export default function UrbanMap({
             </span>
           </div>
 
-          <div
-            className="gradient-legend__bar"
-            style={{
-              background: `linear-gradient(to right, ${scale.map((s) => s.color).join(', ')})`,
-            }}
-          />
+          <ol className="legend-classes">
+            {scale.map((cls) => (
+              <li
+                className="legend-class"
+                key={cls.min}
+                title={`${formatNumber(cls.min, 1)} – ${formatNumber(cls.max, 1)} ${
+                  activeMetric.unit
+                } · ${cls.count} AGEB${cls.count === 1 ? '' : 's'}`}
+              >
+                <i style={{ background: cls.color }} />
+                <span className="legend-class__edge">
+                  {formatNumber(cls.min, 0)}
+                </span>
+              </li>
+            ))}
+          </ol>
 
-          <div className="gradient-legend__labels">
-            <span>{formatNumber(scale[0].value, 1)}</span>
-            <span>{formatNumber(scale[Math.floor(scale.length / 2)].value, 1)}</span>
-            <span>{formatNumber(scale[scale.length - 1].value, 1)}</span>
-          </div>
+          <p className="legend-footnote">
+            <span>
+              Quintiles · {scale.reduce((sum, cls) => sum + cls.count, 0)} AGEBs
+            </span>
+            <span className="legend-footnote__max">
+              max {formatNumber(scale[scale.length - 1].max, 0)}
+            </span>
+          </p>
         </section>
       )}
 
       {error && (
-        <div className="urban-map__error glass-panel">
-          Failed to load geospatial data: {error.message}
+        <div className="urban-map__error glass-panel" role="alert">
+          <strong>The AGEB boundaries could not be loaded</strong>
+          <p>
+            Without them there is nothing to draw. Check that the geometry feed is
+            being served, then reload.
+          </p>
+          <code>{error.message}</code>
+        </div>
+      )}
+
+      {!error && metricsError && (
+        <div className="urban-map__notice glass-panel" role="status">
+          <strong>Boundaries only</strong>
+          <span>
+            The metrics feed did not load, so polygons are drawn unshaded.
+          </span>
         </div>
       )}
     </div>

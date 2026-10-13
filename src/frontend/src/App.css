@@ -216,8 +216,19 @@
   transition: all var(--transition-fast);
 }
 
-.search-item:hover {
-  background: rgba(75, 163, 199, 0.12);
+.search-item:hover,
+.search-item.is-active {
+  background: rgba(75, 163, 199, 0.14);
+}
+
+/* The arrow-key cursor is shown, not just focused, since focus stays in the input */
+.search-item.is-active {
+  box-shadow: inset 0 0 0 1px rgba(75, 163, 199, 0.4);
+}
+
+.selected-dossier:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 3px;
 }
 
 .search-item-pin {

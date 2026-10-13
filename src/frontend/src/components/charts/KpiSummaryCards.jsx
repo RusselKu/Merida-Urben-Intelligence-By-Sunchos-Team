@@ -20,6 +20,14 @@ const GROUP_CONFIG = {
   },
 };
 
+// Absolute counts are not comparable to a citywide total — one AGEB out of 526
+// is trivially ~100% below it. Only normalised metrics carry a benchmark.
+const ABSOLUTE_METRICS = new Set([
+  'poblacion_total',
+  'total_negocios',
+  'total_delitos',
+]);
+
 function getDelta(localVal, cityVal) {
   const l = Number(localVal);
   const c = Number(cityVal);
@@ -127,7 +135,10 @@ export default function KpiSummaryCards({ summary, ageb = null }) {
     <div className="kpi-grid">
       {tiles.map((t) => {
         const groupInfo = GROUP_CONFIG[t.group] || { color: 'cyan', label: t.group };
-        const delta = ageb ? getDelta(t.rawLocal, t.rawCity) : null;
+        const delta =
+          ageb && !ABSOLUTE_METRICS.has(t.key)
+            ? getDelta(t.rawLocal, t.rawCity)
+            : null;
 
         return (
           <div key={t.key} className={`kpi-tile kpi-tile--${groupInfo.color} glass-panel`}>
@@ -135,19 +146,32 @@ export default function KpiSummaryCards({ summary, ageb = null }) {
               <span className={`kpi-tile__group kpi-tile__group--${groupInfo.color}`}>
                 {groupInfo.label}
               </span>
+            </div>
+
+            <div className="kpi-tile__value-row">
+              <span
+                className="kpi-tile__value"
+                title={
+                  t.value === '—'
+                    ? 'Not available: this layer is not loaded in the current warehouse build'
+                    : undefined
+                }
+              >
+                {t.value}
+              </span>
               {delta && !delta.isEqual && (
                 <span
                   className={`kpi-delta-pill ${
                     delta.isPositive ? 'kpi-delta--pos' : 'kpi-delta--neg'
                   }`}
-                  title="Relative benchmark vs Mérida metropolitan average"
+                  title={`${Math.abs(delta.pct)}% ${
+                    delta.isPositive ? 'above' : 'below'
+                  } the Mérida metropolitan average`}
                 >
-                  {delta.isPositive ? `+${delta.pct}%` : `${delta.pct}%`} vs city
+                  {delta.isPositive ? `+${delta.pct}%` : `${delta.pct}%`}
                 </span>
               )}
             </div>
-
-            <span className="kpi-tile__value">{t.value}</span>
             <span className="kpi-tile__label">{t.label}</span>
             <span className="kpi-tile__unit">{t.unit}</span>
           </div>

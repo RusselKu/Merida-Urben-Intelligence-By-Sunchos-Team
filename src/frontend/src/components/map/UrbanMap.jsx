@@ -26,30 +26,33 @@ const ANALYTICS_URL =
   import.meta.env.VITE_ANALYTICS_URL ||
   '/data/analytics_summary.json';
 
+// Sequential ramps derived from the Yucatán token palette (src/index.css).
+// Each is monotonic in lightness so the choropleth stays readable, and each
+// ends on a sunlit limestone tint rather than a neon top stop.
 const PALETTES = {
   cyan: {
     id: 'cyan',
-    name: 'Cyber Cyan',
-    colors: ['#082f49', '#0284c7', '#06b6d4', '#818cf8', '#c084fc'],
-    accent: '#06b6d4',
+    name: 'Maya Blue',
+    colors: ['#16323f', '#1f5a73', '#2f8bab', '#57b4d0', '#a4dcea'],
+    accent: '#4ba3c7',
   },
   solar: {
     id: 'solar',
-    name: 'Solar Flare',
-    colors: ['#1c1917', '#991b1b', '#ea580c', '#f59e0b', '#fde047'],
-    accent: '#f59e0b',
+    name: 'Henequén',
+    colors: ['#36280f', '#5e441b', '#8f6828', '#c2913c', '#e8ce92'],
+    accent: '#d9a441',
   },
   emerald: {
     id: 'emerald',
-    name: 'Emerald Eco',
-    colors: ['#022c22', '#065f46', '#059669', '#10b981', '#6ee7b7'],
-    accent: '#10b981',
+    name: 'Jade',
+    colors: ['#16332a', '#1f5742', '#2d8463', '#45ad83', '#9bd9bc'],
+    accent: '#3fa37a',
   },
   violet: {
     id: 'violet',
-    name: 'Neon Violet',
-    colors: ['#1e1b4b', '#4338ca', '#7c3aed', '#a855f7', '#f472b6'],
-    accent: '#a855f7',
+    name: 'Terracotta',
+    colors: ['#3a221c', '#5e3429', '#8d4e3c', '#bd7058', '#e6ad90'],
+    accent: '#d4654f',
   },
 };
 
@@ -391,7 +394,7 @@ export default function UrbanMap({
         type: 'line',
         source: 'merida-agebs',
         paint: {
-          'line-color': 'rgba(148, 163, 184, 0.45)',
+          'line-color': 'rgba(244, 241, 236, 0.32)',
           'line-width': 0.7,
         },
       });
@@ -407,8 +410,8 @@ export default function UrbanMap({
           selectedCvegeo || '__none__',
         ],
         paint: {
-          'line-color': '#38bdf8',
-          'line-width': 3.5,
+          'line-color': '#f4f1ec',
+          'line-width': 2.6,
           'line-blur': 0.5,
         },
       });

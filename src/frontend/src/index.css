@@ -1,35 +1,51 @@
+/* ==========================================================
+   MÉRIDA URBAN INTELLIGENCE — DESIGN TOKENS
+   Palette grounded in Yucatán: Maya Blue pigment, henequén
+   fibre, colonial terracotta, jade, and the limestone that
+   gives Mérida its name — La Ciudad Blanca.
+   ========================================================== */
 :root {
-  --bg-primary: #070a13;
-  --bg-secondary: #0d1322;
-  --bg-surface: #111a2e;
-  --bg-surface-elevated: #16223b;
-  --bg-card: rgba(13, 20, 36, 0.75);
-  --bg-card-hover: rgba(19, 29, 52, 0.88);
-  --bg-glass: rgba(11, 17, 30, 0.82);
-  --bg-glass-heavy: rgba(7, 11, 20, 0.92);
-  --bg-glass-light: rgba(255, 255, 255, 0.04);
-  
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-color: rgba(255, 255, 255, 0.1);
-  --border-bright: rgba(255, 255, 255, 0.18);
-  --border-accent: rgba(56, 189, 248, 0.28);
-  --border-glow: rgba(6, 182, 212, 0.5);
+  /* Ink: warm limestone shadow, deliberately not blue-black */
+  --bg-primary: #0a0a0c;
+  --bg-secondary: #101114;
+  --bg-surface: #17191d;
+  --bg-surface-elevated: #1f2228;
+  --bg-card: rgba(16, 17, 20, 0.78);
+  --bg-card-hover: rgba(26, 28, 33, 0.9);
+  --bg-glass: rgba(12, 13, 16, 0.84);
+  --bg-glass-heavy: rgba(8, 9, 11, 0.93);
+  --bg-glass-light: rgba(244, 241, 236, 0.04);
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
+  /* Borders tinted from the limestone foreground, never pure white */
+  --border-subtle: rgba(244, 241, 236, 0.07);
+  --border-color: rgba(244, 241, 236, 0.11);
+  --border-bright: rgba(244, 241, 236, 0.2);
+  --border-accent: rgba(75, 163, 199, 0.34);
+  --border-glow: rgba(75, 163, 199, 0.5);
+
+  /* Limestone neutrals */
+  --text-primary: #f4f1ec;
+  --text-secondary: #aba69e;
+  --text-muted: #827d75;
   --text-bright: #ffffff;
 
-  --accent-cyan: #06b6d4;
-  --accent-cyan-glow: rgba(6, 182, 212, 0.4);
-  --accent-cyan-light: #67e8f9;
-  --accent-blue: #3b82f6;
-  --accent-indigo: #6366f1;
-  --accent-violet: #8b5cf6;
-  --accent-emerald: #10b981;
-  --accent-emerald-glow: rgba(16, 185, 129, 0.4);
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
+  /* Maya Blue — the pigment of Chichén Itzá. Primary & interactive. */
+  --accent-cyan: #4ba3c7;
+  --accent-cyan-glow: rgba(75, 163, 199, 0.4);
+  --accent-cyan-light: #8fd0e3;
+  --accent-blue: #3f7fa6;
+
+  /* Supporting hues, all drawn from the same regional world */
+  --accent-indigo: #6b8fb8;   /* cenote depth */
+  --accent-violet: #b07aa1;   /* colonial rose */
+  --accent-emerald: #3fa37a;  /* jade */
+  --accent-emerald-light: #6cc4a0;
+  --accent-emerald-glow: rgba(63, 163, 122, 0.4);
+  --accent-amber: #d9a441;    /* henequén */
+  --accent-amber-light: #e9c47c;
+  --accent-rose: #d4654f;     /* terracotta */
+  --accent-rose-light: #e89177;
+  --accent-stone: #8c8780;    /* limestone grey */
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -37,11 +53,15 @@
   --radius-xl: 18px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 16px 40px -8px rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 16px 40px -8px rgba(0, 0, 0, 0.6);
   --shadow-glow: 0 0 24px -2px var(--accent-cyan-glow);
-  --shadow-glass: 0 12px 36px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --shadow-glass: 0 12px 36px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(244, 241, 236, 0.06);
+
+  --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -55,7 +75,7 @@
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   background-color: var(--bg-primary);
   color: var(--text-primary);
   overflow: hidden;
@@ -63,6 +83,29 @@ body {
   width: 100vw;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  caret-color: var(--accent-cyan);
+  scrollbar-color: rgba(244, 241, 236, 0.16) transparent;
+  scrollbar-width: thin;
+}
+
+/* Browser surfaces inherit the palette, not the UA defaults */
+::selection {
+  background: rgba(75, 163, 199, 0.3);
+  color: var(--text-bright);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Every figure in the product is read as data, so it lines up as data */
+.tnum,
+input[type='number'],
+table {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
 
 #root {
@@ -82,13 +125,13 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.22);
+  background: rgba(244, 241, 236, 0.16);
   border-radius: var(--radius-full);
   transition: background var(--transition-fast);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(103, 232, 249, 0.45);
+  background: rgba(75, 163, 199, 0.55);
 }
 
 /* Glassmorphism helpers */
@@ -104,26 +147,26 @@ body {
 @keyframes beaconPulse {
   0% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    box-shadow: 0 0 0 0 rgba(63, 163, 122, 0.65);
   }
   70% {
     transform: scale(1);
-    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 8px rgba(63, 163, 122, 0);
   }
   100% {
     transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    box-shadow: 0 0 0 0 rgba(63, 163, 122, 0);
   }
 }
 
 @keyframes cyanGlowPulse {
   0%, 100% {
     opacity: 0.4;
-    filter: drop-shadow(0 0 6px rgba(6, 182, 212, 0.6));
+    filter: drop-shadow(0 0 6px rgba(75, 163, 199, 0.6));
   }
   50% {
     opacity: 0.8;
-    filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.9));
+    filter: drop-shadow(0 0 12px rgba(75, 163, 199, 0.9));
   }
 }
 

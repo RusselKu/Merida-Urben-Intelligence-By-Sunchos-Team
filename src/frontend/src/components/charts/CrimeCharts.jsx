@@ -43,7 +43,7 @@ export function CrimeByCategoryChart({ summary }) {
   const rows = summary?.crime?.by_category || [];
   const options = baseOptions({
     plotOptions: { bar: { horizontal: true, borderRadius: 3, barHeight: '65%' } },
-    colors: [COLORS.pink],
+    colors: [COLORS.rose],
     xaxis: {
       categories: rows.map((r) => CRIME_CATEGORY_EN[r.category] || r.category),
       tickAmount: 4,
@@ -89,11 +89,11 @@ export function CrimeTimeHeatmap({ summary }) {
         radius: 3,
         enableShades: true,
         shadeIntensity: 0.6,
-        colorScale: { ranges: [{ from: 0, to: max || 1, color: COLORS.pink }] },
+        colorScale: { ranges: [{ from: 0, to: max || 1, color: COLORS.rose }] },
       },
     },
     dataLabels: { enabled: true, style: { fontSize: '10px', colors: [COLORS.text] } },
-    stroke: { width: 2, colors: ['#0b0f19'] },
+    stroke: { width: 2, colors: ['#0a0a0c'] },
     legend: { show: false },
     tooltip: { theme: 'dark', y: { formatter: (v) => `${fmtInt(v)} incidents` } },
   });

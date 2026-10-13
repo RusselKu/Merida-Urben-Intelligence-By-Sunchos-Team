@@ -18,15 +18,16 @@ const SHORT = {
   delitos_por_100_negocios: 'Crime/100 bus.',
 };
 
-// Diverging scale: blue = negative, neutral gray = none, red = positive.
+// Diverging scale on the two anchor hues of the palette:
+// Maya Blue = negative, limestone grey = none, terracotta = positive.
 const RANGES = [
-  { from: -1, to: -0.5, color: '#1d4ed8', name: 'strong −' },
-  { from: -0.5, to: -0.3, color: '#3b82f6', name: 'moderate −' },
-  { from: -0.3, to: -0.1, color: '#93c5fd', name: 'weak −' },
-  { from: -0.1, to: 0.1, color: '#374151', name: 'negligible' },
-  { from: 0.1, to: 0.3, color: '#fca5a5', name: 'weak +' },
-  { from: 0.3, to: 0.5, color: '#ef4444', name: 'moderate +' },
-  { from: 0.5, to: 1.0001, color: '#b91c1c', name: 'strong +' },
+  { from: -1, to: -0.5, color: '#1c4a5e', name: 'strong −' },
+  { from: -0.5, to: -0.3, color: '#2f86a6', name: 'moderate −' },
+  { from: -0.3, to: -0.1, color: '#7cc0d4', name: 'weak −' },
+  { from: -0.1, to: 0.1, color: '#3a3833', name: 'negligible' },
+  { from: 0.1, to: 0.3, color: '#e3a68e', name: 'weak +' },
+  { from: 0.3, to: 0.5, color: '#c5634a', name: 'moderate +' },
+  { from: 0.5, to: 1.0001, color: '#8a3527', name: 'strong +' },
 ];
 
 export default function CorrelationHeatmap({ summary }) {
@@ -58,7 +59,7 @@ export default function CorrelationHeatmap({ summary }) {
       style: { fontSize: '10px', colors: [COLORS.text] },
       formatter: (v) => v.toFixed(2),
     },
-    stroke: { width: 1, colors: ['#0b0f19'] },
+    stroke: { width: 1, colors: ['#0a0a0c'] },
     xaxis: { labels: { rotate: -45, style: { fontSize: '10px' } }, tooltip: { enabled: false } },
     yaxis: { labels: { style: { fontSize: '10px', colors: COLORS.muted } } },
     legend: { position: 'bottom', fontSize: '11px' },
